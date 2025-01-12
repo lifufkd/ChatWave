@@ -1,15 +1,22 @@
-import asyncio
+from fastapi import FastAPI
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.redis import RedisBackend
+from contextlib import asynccontextmanager
 
-from database.postgresql import session, engine, OrmBase
-from database.redis import redis_client
-
-
-async def main():
-    async with engine.begin() as con:
-        await con.run_sync(OrmBase.metadata.create_all)
-
-print(redis_client.keys("*"))
+from database import redis_client
+from repository import create_tables
 
 
-asyncio.run(main())
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    FastAPICache.init(RedisBackend(redis_client), prefix="chatwave-cache")
+    await create_tables()
+    yield
+
+app = FastAPI(lifespan=lifespan)
+
+# app.include_router()
+
+# if __name__ == "__main__":
+#     pass
 
