@@ -1,5 +1,5 @@
-import redis
-from utilities.config import redis_settings
+import redis.asyncio as redis
+from utilities import redis_settings
 
 
 redis_client = redis.Redis(
