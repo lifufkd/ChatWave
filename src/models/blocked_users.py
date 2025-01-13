@@ -1,23 +1,20 @@
-from sqlalchemy import ForeignKey, Index
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database import OrmBase
-from utilities import datetime_type
+from utilities import datetime_required_type
 
 
 class BlockedUsers(OrmBase):
     __tablename__ = 'blocked_users'
-    id: Mapped[int] = mapped_column(
+    blocker_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id"),
         primary_key=True
     )
-    blocker_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id")
-    )
     blocked_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id")
+        ForeignKey("users.id"),
+        primary_key=True
     )
-    created_at: Mapped[datetime_type]
+    created_at: Mapped[datetime_required_type]
 
-    __table_args__ = (
-        Index("ix_blocked_users_blocker_id_blocked_id", "blocker_id", "blocked_id"),
-    )
+
