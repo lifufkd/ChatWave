@@ -14,7 +14,7 @@ class DBSettings(BaseSettings):
         return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_DATABASE}"
 
     class Config:
-        env_file = "../.env"
+        env_file = ".env"
         extra = "allow"
 
 
@@ -26,7 +26,7 @@ class RedisSettings(BaseSettings):
     REDIS_PORT: str
 
     class Config:
-        env_file = "../.env"
+        env_file = ".env"
         extra = "allow"
 
 
