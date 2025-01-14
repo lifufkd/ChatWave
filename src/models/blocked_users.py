@@ -2,7 +2,7 @@ from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database import OrmBase
-from utilities import datetime_required_type
+from utilities import datetime_auto_set
 
 
 class BlockedUsers(OrmBase):
@@ -15,6 +15,6 @@ class BlockedUsers(OrmBase):
         ForeignKey("users.id"),
         primary_key=True
     )
-    created_at: Mapped[datetime_required_type]
+    created_at: Mapped[datetime_auto_set]
 
 

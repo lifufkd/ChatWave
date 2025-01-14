@@ -1,3 +1,4 @@
+from sqlalchemy import text
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime
@@ -25,6 +26,7 @@ class Messages(OrmBase):
     content: Mapped[text_not_required_type]
     content_url: Mapped[text_not_required_type]
     created_at: Mapped[datetime] = mapped_column(
+        server_default=text("TIMEZONE('utc', now())"),
         index=True,
         nullable=False
     )

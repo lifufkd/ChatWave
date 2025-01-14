@@ -2,7 +2,7 @@ from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database import OrmBase
-from utilities import ConversationMemberRoles, datetime_required_type
+from utilities import ConversationMemberRoles, datetime_auto_set
 
 
 class ConversationMembers(OrmBase):
@@ -17,5 +17,5 @@ class ConversationMembers(OrmBase):
     )
 
     role: Mapped[ConversationMemberRoles] = mapped_column(nullable=False)
-    joined_at: Mapped[datetime_required_type]
+    joined_at: Mapped[datetime_auto_set]
 

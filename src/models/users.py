@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship, Mapped, mapped_column
 from datetime import date
 
 from database import OrmBase
-from utilities import datetime_required_type, datetime_not_required_type, text_not_required_type, primary_key_type
+from utilities import datetime_auto_set, datetime_not_required_type, text_not_required_type, primary_key_type
 
 
 class Users(OrmBase):
@@ -16,17 +16,17 @@ class Users(OrmBase):
     bio: Mapped[text_not_required_type]
     avatar_url: Mapped[text_not_required_type]
     last_online: Mapped[datetime_not_required_type]
-    created_at: Mapped[datetime_required_type]
+    created_at: Mapped[datetime_auto_set]
     updated_at: Mapped[datetime_not_required_type]
 
-    blocked_user: Mapped[list["BlockedUsers"]] = relationship()
-    blocker_user: Mapped[list["BlockedUsers"]] = relationship()
+    blocked_user: Mapped[list["BlockedUsers"]] = relationship(foreign_keys="BlockedUsers.blocker_id")
+    blocker_user: Mapped[list["BlockedUsers"]] = relationship(foreign_keys="BlockedUsers.blocker_id")
     owned_conversations: Mapped[list["Conversations"]] = relationship(
         back_populates="creator"
     )
     conversations: Mapped[list["Conversations"]] = relationship(
         back_populates="members",
-        secondary="conversations_members"
+        secondary=f"{OrmBase.metadata.schema}.conversations_members"
     )
     messages: Mapped[list["Messages"]] = relationship(
         back_populates="sender"

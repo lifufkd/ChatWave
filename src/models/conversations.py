@@ -3,7 +3,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime
 
 from database import OrmBase
-from utilities import text_not_required_type, datetime_required_type, datetime_not_required_type, ConversationTypes, primary_key_type
+from utilities import text_not_required_type, datetime_auto_set, ConversationTypes, primary_key_type
 
 
 class Conversations(OrmBase):
@@ -16,7 +16,7 @@ class Conversations(OrmBase):
     name: Mapped[text_not_required_type]
     avatar_url: Mapped[text_not_required_type]
     description: Mapped[text_not_required_type]
-    created_at: Mapped[datetime_required_type]
+    created_at: Mapped[datetime_auto_set]
     updated_at: Mapped[datetime] = mapped_column(
         index=True,
         nullable=True
@@ -27,9 +27,12 @@ class Conversations(OrmBase):
     )
     members: Mapped[list["Users"]] = relationship(
         back_populates="conversations",
-        secondary="conversations_members"
+        secondary=f"{OrmBase.metadata.schema}.conversations_members"
     )
     messages: Mapped[list["Messages"]] = relationship(
+        back_populates="conversation"
+    )
+    calls: Mapped[list["Calls"]] = relationship(
         back_populates="conversation"
     )
     unread_messages: Mapped[list["UnreadMessages"]] = relationship()

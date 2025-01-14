@@ -1,9 +1,10 @@
+from sqlalchemy import text
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime
 
 from database import OrmBase
-from utilities import datetime_required_type, datetime_not_required_type, primary_key_type, CallsStatus
+from utilities import datetime_not_required_type, primary_key_type, CallsStatus
 
 
 class Calls(OrmBase):
@@ -19,6 +20,7 @@ class Calls(OrmBase):
     status: Mapped[CallsStatus] = mapped_column()
     duration: Mapped[int] = mapped_column()
     started_at: Mapped[datetime] = mapped_column(
+        server_default=text("TIMEZONE('utc', now())"),
         index=True,
         nullable=False
     )

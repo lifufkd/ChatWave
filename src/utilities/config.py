@@ -30,5 +30,16 @@ class RedisSettings(BaseSettings):
         extra = "allow"
 
 
+class JWTSettings(BaseSettings):
+    JWT_ALGORITHM: str
+    JWT_SECRET_KEY: str
+    JWT_ACCESS_TOKEN_EXPIRES: int = 1209600
+
+    class Config:
+        env_file = ".env"
+        extra = "allow"
+
+
 redis_settings = RedisSettings()
 db_settings = DBSettings()
+jwt_settings = JWTSettings()
