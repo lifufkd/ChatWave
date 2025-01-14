@@ -1,3 +1,4 @@
+from sqlalchemy import text
 from sqlalchemy.orm import mapped_column
 from datetime import datetime
 from typing import Annotated
@@ -7,6 +8,7 @@ from enum import Enum
 datetime_required_type = Annotated[datetime, mapped_column(nullable=False)]
 text_required_type = Annotated[str, mapped_column(nullable=False)]
 datetime_not_required_type = Annotated[datetime, mapped_column(nullable=True)]
+datetime_auto_set = Annotated[datetime, mapped_column(nullable=False, server_default=text("TIMEZONE('utc', now())"))]
 text_not_required_type = Annotated[str, mapped_column(nullable=True)]
 primary_key_type = Annotated[int, mapped_column(primary_key=True)]
 
