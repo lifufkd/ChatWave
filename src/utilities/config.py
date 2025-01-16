@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings
+from pathlib import Path
 
 
 class DBSettings(BaseSettings):
@@ -40,6 +41,18 @@ class JWTSettings(BaseSettings):
         extra = "allow"
 
 
+class GenericSettings(BaseSettings):
+    MEDIA_FOLDER: Path
+    ALLOWED_MEDIA_TYPES: list[str] = ["image/jpeg", "image/png"]
+    MAX_UPLOAD_SIZE: int = 30
+    MAX_ITEMS_PER_REQUEST: int = 100
+
+    class Config:
+        env_file = ".env"
+        extra = "allow"
+
+
 redis_settings = RedisSettings()
 db_settings = DBSettings()
 jwt_settings = JWTSettings()
+generic_settings = GenericSettings()
