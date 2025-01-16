@@ -9,7 +9,7 @@ from utilities import UserNotFoundError, InvalidPasswordError, UserAlreadyExists
 
 
 authorization_router = APIRouter(
-    tags=['authorization'],
+    tags=['Authorization'],
     prefix="/auth"
 )
 
