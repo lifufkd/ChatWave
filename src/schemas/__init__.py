@@ -1,2 +1,14 @@
-from .users import AuthorizeUser, CreateUser, CreateUserExtended
+from .users import (
+    AuthorizeUser,
+    CreateUser,
+    CreateUserExtended,
+    PublicUser,
+    PrivateUser,
+    UpdateUser,
+    SearchUser,
+    UpdateUserExtended,
+    Avatars,
+    UserOnline,
+    UserOnlineExtended,
+)
 
