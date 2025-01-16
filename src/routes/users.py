@@ -22,24 +22,24 @@ async def my_profile_endpoint(current_user_id: Annotated[int, Depends(verify_tok
 
 
 @users_router.post("/users_profiles", status_code=status.HTTP_200_OK, response_model=list[PublicUser])
-async def users_profiles_endpoint(search_params: SearchUser):
+async def users_profiles_endpoint(current_user_id: Annotated[int, Depends(verify_token)], search_params: SearchUser, _=Depends(process_user_last_online_update)):
     profile_data = await get_profiles(search_params=search_params)
 
     return profile_data
 
 
 @users_router.put("/update_profile", status_code=status.HTTP_204_NO_CONTENT)
-async def update_profile_endpoint(current_user_id: Annotated[int, Depends(verify_token)], profile_data: UpdateUser):
+async def update_profile_endpoint(current_user_id: Annotated[int, Depends(verify_token)], profile_data: UpdateUser, _=Depends(process_user_last_online_update)):
     await update_profile(user_id=current_user_id, profile=profile_data)
 
 
 @users_router.post("/users_last_online", status_code=status.HTTP_200_OK, response_model=list[UserOnlineExtended])
-async def users_last_online_endpoint(users_ids: UserOnline):
+async def users_last_online_endpoint(current_user_id: Annotated[int, Depends(verify_token)], users_ids: UserOnline, _=Depends(process_user_last_online_update)):
     return await users_online(user_ids=users_ids)
 
 
 @users_router.put("/update_avatar", status_code=status.HTTP_204_NO_CONTENT)
-async def update_profile_endpoint(current_user_id: Annotated[int, Depends(verify_token)], avatar: UploadFile = File()):
+async def update_profile_endpoint(current_user_id: Annotated[int, Depends(verify_token)], avatar: UploadFile = File(), _=Depends(process_user_last_online_update)):
     try:
         await update_avatar(user_id=current_user_id, avatar=avatar)
     except InvalidFileType as e:
@@ -59,7 +59,7 @@ async def avatar_endpoint(user_id: str):
 
 
 @users_router.post("/avatars", status_code=status.HTTP_200_OK)
-async def avatars_endpoint(avatars: Avatars):
+async def avatars_endpoint(current_user_id: Annotated[int, Depends(verify_token)], avatars: Avatars, _=Depends(process_user_last_online_update)):
     zip_obj = await get_avatars(avatars.users_ids)
     return StreamingResponse(zip_obj, media_type="application/zip")
 
