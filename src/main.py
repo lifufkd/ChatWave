@@ -5,11 +5,13 @@ from contextlib import asynccontextmanager
 
 from database import redis_client
 from repository import create_tables, delete_tables
-from routes import authorization_router
+from routes import authorization_router, users_router
+from utilities import FileManager
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    FileManager().init_folders()
     FastAPICache.init(RedisBackend(redis_client), prefix="chatwave-cache")
     # await delete_tables()  # TODO: Remove after debug
     await create_tables()
@@ -18,6 +20,4 @@ async def lifespan(_: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 app.include_router(authorization_router)
-
-
-
+app.include_router(users_router)
