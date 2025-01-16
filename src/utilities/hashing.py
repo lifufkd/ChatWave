@@ -1,11 +1,13 @@
 from jose import jwt
 from passlib import context
 from datetime import datetime, timedelta
+from fastapi.security import OAuth2PasswordBearer
 
 from utilities import jwt_settings
 
 
 crypt_context = context.CryptContext(schemes=["bcrypt"], deprecated='auto')
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 
 class Hash:
