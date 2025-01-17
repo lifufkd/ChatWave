@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, text
+from sqlalchemy import ForeignKey, text, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime
 
@@ -13,8 +13,7 @@ class Conversations(OrmBase):
         ForeignKey("users.id")
     )
     type: Mapped[ConversationTypes] = mapped_column(index=True)
-    name: Mapped[text_not_required_type]
-    avatar_url: Mapped[text_not_required_type]
+    name: Mapped[str] = mapped_column(String(64), nullable=True)
     description: Mapped[text_not_required_type]
     created_at: Mapped[datetime_auto_set]
     updated_at: Mapped[datetime] = mapped_column(

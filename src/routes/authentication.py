@@ -4,7 +4,7 @@ from fastapi_cache.decorator import cache
 from typing import Annotated
 
 from schemas import AuthorizeUser, CreateUser
-from services import login, signup
+from services import get_access_token, add_user
 from utilities import UserNotFoundError, InvalidPasswordError, UserAlreadyExists
 
 
@@ -19,7 +19,7 @@ authorization_router = APIRouter(
 async def login_endpoint(request: Annotated[OAuth2PasswordRequestForm, Depends()]):
     try:
         user_obj = AuthorizeUser(username=request.username, password=request.password)
-        access_token = await login(user_obj)
+        access_token = await get_access_token(user_obj)
         return {"access_token": access_token, "token_type": "bearer"}
     except UserNotFoundError:
         raise HTTPException(
@@ -36,6 +36,6 @@ async def login_endpoint(request: Annotated[OAuth2PasswordRequestForm, Depends()
 @authorization_router.post('/signup', status_code=status.HTTP_201_CREATED)
 async def signup_endpoint(request: CreateUser):
     try:
-        await signup(request)
+        await add_user(request)
     except UserAlreadyExists:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='User already exists')
