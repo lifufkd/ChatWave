@@ -37,3 +37,11 @@ class ImageCorrupted(Exception):
     def __init__(self, detail: str):
         self.message = detail
         super().__init__(detail)
+
+
+class ChatAlreadyExists(Exception):
+    pass
+
+
+class SameUsersIds(Exception):
+    pass
