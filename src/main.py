@@ -5,7 +5,13 @@ from contextlib import asynccontextmanager
 
 from database import redis_client
 from repository import create_tables, delete_tables
-from routes import authorization_router, users_router
+from routes import (
+    authorization_router,
+    users_router,
+    conversations_router,
+    anonymous_users_router,
+    anonymous_conversations_router
+)
 from utilities import FileManager
 
 
@@ -20,4 +26,10 @@ async def lifespan(_: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 app.include_router(authorization_router)
+
 app.include_router(users_router)
+app.include_router(anonymous_users_router)
+
+app.include_router(anonymous_conversations_router)
+
+app.include_router(conversations_router)
