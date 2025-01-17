@@ -58,12 +58,12 @@ async def get_public_users(search_params: SearchUser) -> list[Users]:
             if search_params.limit == 0:
                 _query = (
                     select(Users)
-                    .filter(Users.nickname.like(search_params.nickname))
+                    .filter(Users.nickname.icontains(search_params.nickname))
                 )
             else:
                 _query = (
                     select(Users)
-                    .filter(Users.nickname.like(search_params.nickname))
+                    .filter(Users.nickname.icontains(search_params.nickname))
                     .limit(search_params.limit)
                 )
 
