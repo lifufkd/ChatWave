@@ -65,7 +65,6 @@ class UpdateUser(BaseModel):
 
 class UpdateUserExtended(UpdateUser):
     password_hash: Annotated[Optional[str], Field(None)]
-    updated_at: Annotated[Optional[datetime], Field(None)]
 
 
 class SearchUser(AnswerLimit):
@@ -80,7 +79,7 @@ class SearchUser(AnswerLimit):
     def check_only_one_field_filled(cls, values):
         return validate_nicknames_and_ids(values)
 
-    @field_validator('ids', 'nickname', mode='after')
+    @field_validator('ids', mode='after')
     def set_limits(cls, values):
         return request_limit(values)
 

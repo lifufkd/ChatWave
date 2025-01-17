@@ -31,7 +31,6 @@ async def update_profile(user_id: int, profile: UpdateUser) -> None:
     if profile.password is not None:
         user_extended_obj.password_hash = Hash.hash_password(profile.password)
 
-    user_extended_obj.updated_at = text("TIMEZONE('utc', now())")
     await update_user(user_id, user_extended_obj)
 
 
