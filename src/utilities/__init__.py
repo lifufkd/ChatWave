@@ -11,6 +11,7 @@ from .types_storage import (
     MessagesStatus,
     MessagesTypes,
     CallsStatus,
+    datetime_auto_update,
 )
 from .hashing import Hash, JWT, oauth2_scheme
 from .types_converters import sqlalchemy_to_pydantic, many_sqlalchemy_to_pydantic
