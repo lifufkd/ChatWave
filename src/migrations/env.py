@@ -75,6 +75,7 @@ def run_migrations_online() -> None:
             connection=connection,
             target_metadata=target_metadata,
             compare_server_default=True,
+            compare_type=True,
             include_schemas=True,
             version_table_schema=target_metadata.schema,
         )
