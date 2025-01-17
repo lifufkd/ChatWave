@@ -22,7 +22,9 @@ from .exceptions_storage import (
     credential_exception,
     InvalidFileType,
     FIleToBig,
-    ImageCorrupted
+    ImageCorrupted,
+    ChatAlreadyExists,
+    SameUsersIds
 )
 from .file_manager import FileManager
 from .validators import validate_password, validate_nicknames, validate_nicknames_and_ids, request_limit
