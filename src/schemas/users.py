@@ -1,4 +1,3 @@
-import re
 from pydantic import BaseModel, Field, model_validator, field_validator
 from typing import Annotated, Optional
 from datetime import datetime, date

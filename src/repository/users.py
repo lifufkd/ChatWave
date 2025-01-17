@@ -1,12 +1,26 @@
 from datetime import datetime
 from sqlalchemy import select, insert, update, text
+from sqlalchemy.orm import selectinload
 
-from models import Users
+from models import Users, Conversations
 from database import session
 from schemas import AuthorizeUser, CreateUserExtended, UpdateUserExtended, UserOnline, SearchUser
 
 
-async def authorize_user(user_data: AuthorizeUser) -> bool:
+async def check_user_is_existed(user_id: int) -> bool:
+    async with session() as cursor:
+        query = (
+            select(Users.id)
+            .filter_by(id=user_id)
+        )
+        result = await cursor.execute(query)
+        if result.first():
+            return True
+
+        return False
+
+
+async def get_user_by_username_from_db(user_data: AuthorizeUser) -> tuple[int, str]:
     async with session() as cursor:
         query = (
             select(Users.id, Users.password_hash)
@@ -14,16 +28,11 @@ async def authorize_user(user_data: AuthorizeUser) -> bool:
         )
         raw_data = await cursor.execute(query)
         raw_data = raw_data.first()
-        if not raw_data:
-            return False
 
-        user_data.id = raw_data[0]
-        user_data.password_hash = raw_data[1]
-
-        return True
+        return raw_data
 
 
-async def register_user(user_data: CreateUserExtended) -> None:
+async def insert_user_in_db(user_data: CreateUserExtended) -> None:
     async with session() as cursor:
         query = (
             insert(Users)
@@ -33,7 +42,7 @@ async def register_user(user_data: CreateUserExtended) -> None:
         await cursor.commit()
 
 
-async def get_private_user(user_id: int) -> Users:
+async def get_private_user_from_db(user_id: int) -> Users:
     async with session() as cursor:
         query = (
             select(Users)
@@ -45,7 +54,7 @@ async def get_private_user(user_id: int) -> Users:
         return raw_data
 
 
-async def get_public_users(search_params: SearchUser) -> list[Users]:
+async def get_public_users_from_db(search_params: SearchUser) -> list[Users]:
 
     def query_builder():
         if search_params.ids is not None:
@@ -77,7 +86,7 @@ async def get_public_users(search_params: SearchUser) -> list[Users]:
         return raw_data
 
 
-async def update_user(user_id: int, user_data: UpdateUserExtended) -> None:
+async def update_user_in_db(user_id: int, user_data: UpdateUserExtended) -> None:
     async with session() as cursor:
         query = (
             update(Users)
@@ -93,13 +102,13 @@ async def update_user_last_online_in_db(user_id: int) -> None:
         query = (
             update(Users)
             .filter_by(id=user_id)
-            .values(last_online=text("TIMEZONE('utc', now())"))
+            .values(last_online=text("TIMEZONE('utc', now())"), updated_at=text("updated_at"))
         )
         await cursor.execute(query)
         await cursor.commit()
 
 
-async def get_users_online(users: UserOnline) -> list[tuple[int, datetime]]:
+async def get_users_online_from_db(users: UserOnline) -> list[tuple[int, datetime]]:
     async with session() as cursor:
         query = (
             select(Users.id, Users.last_online)
@@ -110,3 +119,13 @@ async def get_users_online(users: UserOnline) -> list[tuple[int, datetime]]:
 
         return raw_data
 
+
+async def get_user_conversations_from_db(user_id: int) -> Users:
+    async with session() as cursor:
+        query = (
+            select(Users)
+            .options(selectinload(Users.conversations))
+            .filter_by(id=user_id)
+        )
+        raw_data = await cursor.execute(query)
+        return raw_data.scalar()

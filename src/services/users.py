@@ -1,13 +1,13 @@
 from fastapi import UploadFile
 from sqlalchemy import text
-from repository import get_private_user, update_user, get_public_users, get_users_online
+from repository import get_private_user_from_db, update_user_in_db, get_public_users_from_db, get_users_online_from_db
 from schemas import PrivateUser, UpdateUser, PublicUser, SearchUser, UpdateUserExtended, UserOnlineExtended, UserOnline
 from utilities import sqlalchemy_to_pydantic, many_sqlalchemy_to_pydantic, FileManager, generic_settings, Hash
 from io import BytesIO
 
 
 async def get_profile(user_id: int) -> PrivateUser:
-    user_raw = await get_private_user(user_id)
+    user_raw = await get_private_user_from_db(user_id)
     user_obj = await sqlalchemy_to_pydantic(
         sqlalchemy_model=user_raw,
         pydantic_model=PrivateUser
@@ -17,7 +17,7 @@ async def get_profile(user_id: int) -> PrivateUser:
 
 
 async def get_profiles(search_params: SearchUser) -> list[PublicUser]:
-    raw_users = await get_public_users(search_params=search_params)
+    raw_users = await get_public_users_from_db(search_params=search_params)
     users_objs = await many_sqlalchemy_to_pydantic(
         sqlalchemy_models=raw_users,
         pydantic_model=PublicUser
@@ -31,7 +31,7 @@ async def update_profile(user_id: int, profile: UpdateUser) -> None:
     if profile.password is not None:
         user_extended_obj.password_hash = Hash.hash_password(profile.password)
 
-    await update_user(user_id, user_extended_obj)
+    await update_user_in_db(user_id, user_extended_obj)
 
 
 async def update_avatar(user_id: int, avatar: UploadFile) -> None:
@@ -51,7 +51,7 @@ async def get_avatars(users_ids: list[int]) -> BytesIO:
 
 
 async def users_online(user_ids: UserOnline) -> list[UserOnlineExtended]:
-    raw_data = await get_users_online(users=user_ids)
+    raw_data = await get_users_online_from_db(users=user_ids)
     users_objs = list()
     for item in raw_data:
         transformed_data = {
