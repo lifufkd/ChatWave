@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime
 
@@ -18,6 +18,7 @@ class Conversations(OrmBase):
     description: Mapped[text_not_required_type]
     created_at: Mapped[datetime_auto_set]
     updated_at: Mapped[datetime] = mapped_column(
+        onupdate=text("TIMEZONE('utc', now())"),
         index=True,
         nullable=True
     )

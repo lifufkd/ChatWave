@@ -3,7 +3,13 @@ from sqlalchemy.orm import relationship, Mapped, mapped_column
 from datetime import date
 
 from database import OrmBase
-from utilities import datetime_auto_set, datetime_not_required_type, text_not_required_type, primary_key_type
+from utilities import (
+    datetime_auto_set,
+    datetime_not_required_type,
+    text_not_required_type,
+    primary_key_type,
+    datetime_auto_update
+)
 
 
 class Users(OrmBase):
@@ -16,7 +22,7 @@ class Users(OrmBase):
     bio: Mapped[text_not_required_type]
     last_online: Mapped[datetime_not_required_type]
     created_at: Mapped[datetime_auto_set]
-    updated_at: Mapped[datetime_not_required_type]
+    updated_at: Mapped[datetime_auto_update]
 
     blocked_user: Mapped[list["BlockedUsers"]] = relationship(foreign_keys="BlockedUsers.blocker_id")
     blocker_user: Mapped[list["BlockedUsers"]] = relationship(foreign_keys="BlockedUsers.blocker_id")

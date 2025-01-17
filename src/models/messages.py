@@ -31,6 +31,7 @@ class Messages(OrmBase):
         nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
+        onupdate=text("TIMEZONE('utc', now())"),
         index=True,
         nullable=True
     )
