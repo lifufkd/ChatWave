@@ -13,6 +13,22 @@ class UserNotFoundError(Exception):
     pass
 
 
+class ConversationNotFoundError(Exception):
+    pass
+
+
+class AccessDeniedError(Exception):
+    pass
+
+
+class IsNotAGroupError(Exception):
+    pass
+
+
+class IsNotAChatError(Exception):
+    pass
+
+
 class InvalidPasswordError(Exception):
     pass
 
@@ -44,4 +60,8 @@ class ChatAlreadyExists(Exception):
 
 
 class SameUsersIds(Exception):
+    pass
+
+
+class FileNotFound(Exception):
     pass
