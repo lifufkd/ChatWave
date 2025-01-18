@@ -2,6 +2,31 @@ from sqlalchemy import select, update
 
 from models import Conversations, Users
 from database import session
+from schemas import EditConversationExtended
+from utilities import ConversationTypes
+
+
+async def check_is_conversation_existed(conversation_id: int) -> bool:
+    async with session() as cursor:
+        query = (
+            select(Conversations.id)
+            .filter_by(id=conversation_id)
+        )
+        result = await cursor.execute(query)
+        if result.first():
+            return True
+
+        return False
+
+
+async def get_conversation_type(conversation_id: int) -> ConversationTypes:
+    async with session() as cursor:
+        query = (
+            select(Conversations.type)
+            .filter_by(id=conversation_id)
+        )
+        result = await cursor.execute(query)
+        return result.scalar()
 
 
 async def add_conversation_in_db(conversation_obj: Conversations):
@@ -11,10 +36,47 @@ async def add_conversation_in_db(conversation_obj: Conversations):
         await cursor.refresh(conversation_obj)
 
 
-async def add_members_to_conversation_in_db(conversation_obj: Conversations, members: list[Users]):
+async def get_conversation_from_db(conversation_id: int) -> Conversations:
     async with session() as cursor:
-        conversation_obj.members.extend(members)
-        cursor.add(conversation_obj)
+        query = (
+            select(Conversations)
+            .filter_by(id=conversation_id)
+        )
+        result = await cursor.execute(query)
+        return result.scalar()
 
+
+async def get_conversations_from_db(conversations_ids: list[int]) -> list[Conversations]:
+    async with session() as cursor:
+        query = (
+            select(Conversations)
+            .filter(Conversations.id.in_(conversations_ids))
+        )
+        result = await cursor.execute(query)
+        return result.scalars().all()
+
+
+async def delete_conversation_avatar_from_db(conversation_id: int) -> None:
+    async with session() as cursor:
+        query = (
+            update(Conversations)
+            .filter_by(id=conversation_id)
+            .values(
+                avatar_name=None,
+                avatar_type=None
+            )
+        )
+        await cursor.execute(query)
         await cursor.commit()
-        await cursor.refresh(conversation_obj)
+
+
+async def update_conversation_in_db(conversation_id: int, conversation_obj: EditConversationExtended):
+    async with session() as cursor:
+        query = (
+            update(Conversations)
+            .filter_by(id=conversation_id)
+            .values(**conversation_obj.model_dump(exclude_none=True))
+        )
+        await cursor.execute(query)
+        await cursor.commit()
+
