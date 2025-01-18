@@ -1,5 +1,6 @@
 import re
 from utilities import generic_settings
+from pydantic import BaseModel, model_validator
 
 
 def validate_password(value: str) -> str | None:
@@ -23,21 +24,18 @@ def validate_nicknames(value: str) -> str | None:
     return value
 
 
-def validate_nicknames_and_ids(values):
-    nicknames = values.get('nickname')
-    ids = values.get('ids')
-
-    # Проверяем, что одно из полей заполнено, а другое нет
-    if (nicknames and ids) or (not nicknames and not ids):
-        raise ValueError("Only one of 'nickname' or 'ids' can be filled, and one must be filled.")
-
-    return values
-
-
 def request_limit(values: list[any]) -> list[any]:
     if values is not None:
         if len(values) > generic_settings.MAX_ITEMS_PER_REQUEST:
             raise ValueError(f'Request limit must be less than {generic_settings.MAX_ITEMS_PER_REQUEST} characters')
 
     return values
+
+
+class ValidateModelNotEmpty(BaseModel):
+    @model_validator(mode="before")
+    def validate_not_empty(cls, values: dict[str, any]) -> dict[str, any]:
+        if not any(values.values()):
+            raise ValueError("At least one field must be filled.")
+        return values
 
