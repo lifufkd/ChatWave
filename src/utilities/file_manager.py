@@ -16,7 +16,7 @@ class FileManager:
         media_folder = generic_settings.MEDIA_FOLDER
         avatars_folder = media_folder / "avatars"
         messages_folder = media_folder / "messages"
-        groups_folder = media_folder / "groups"
+        groups_folder = media_folder / "groups" / "avatars"
         for folder in [avatars_folder, messages_folder, groups_folder]:
             self._create_directory(folder)
 
@@ -40,6 +40,14 @@ class FileManager:
     @staticmethod
     def file_exists(path: Path) -> bool:
         return path.exists() and path.is_file()
+
+    @staticmethod
+    def delete_file(path: Path) -> None:
+        path.unlink()
+
+    def pack_to_zip_files(self, paths: list[Path]) -> io.BytesIO:
+        zip_obj = self.archive_files(paths=paths)
+        return zip_obj
 
     def archive_files(self, paths: list[Path]) -> io.BytesIO:
         zip_buffer = io.BytesIO()
