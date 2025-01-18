@@ -1,13 +1,46 @@
+from pathlib import Path
 from fastapi import UploadFile
-from sqlalchemy import text
-from repository import get_private_user_from_db, update_user_in_db, get_public_users_from_db, get_users_online_from_db
-from schemas import PrivateUser, UpdateUser, PublicUser, SearchUser, UpdateUserExtended, UserOnlineExtended, UserOnline
-from utilities import sqlalchemy_to_pydantic, many_sqlalchemy_to_pydantic, FileManager, generic_settings, Hash
+from repository import (
+    update_user_in_db,
+    get_users_by_nickname_from_db,
+    get_users_online_from_db,
+    delete_user_avatar_in_db,
+    get_user_from_db,
+    get_users_from_db
+)
+from schemas import (
+    PrivateUser,
+    UpdateUser,
+    PublicUser,
+    SearchUser,
+    UpdateUserExtended,
+    UserOnlineExtended,
+    UserOnline,
+    GetUsers
+)
+from utilities import (
+    sqlalchemy_to_pydantic,
+    many_sqlalchemy_to_pydantic,
+    FileManager,
+    generic_settings,
+    Hash,
+    FileNotFound
+)
 from io import BytesIO
 
 
-async def get_profile(user_id: int) -> PrivateUser:
-    user_raw = await get_private_user_from_db(user_id)
+async def get_public_user(user_id: int) -> PublicUser:
+    user_raw = await get_user_from_db(user_id=user_id)
+    user_obj = await sqlalchemy_to_pydantic(
+        sqlalchemy_model=user_raw,
+        pydantic_model=PublicUser
+    )
+
+    return user_obj
+
+
+async def get_private_user(user_id: int) -> PrivateUser:
+    user_raw = await get_user_from_db(user_id=user_id)
     user_obj = await sqlalchemy_to_pydantic(
         sqlalchemy_model=user_raw,
         pydantic_model=PrivateUser
@@ -16,8 +49,28 @@ async def get_profile(user_id: int) -> PrivateUser:
     return user_obj
 
 
-async def get_profiles(search_params: SearchUser) -> list[PublicUser]:
-    raw_users = await get_public_users_from_db(search_params=search_params)
+async def get_public_users(request_obj: GetUsers) -> list[PublicUser]:
+    raw_users = await get_users_from_db(users_ids=request_obj.users_ids)
+    users_objs = await many_sqlalchemy_to_pydantic(
+        sqlalchemy_models=raw_users,
+        pydantic_model=PublicUser
+    )
+
+    return users_objs
+
+
+async def get_private_users(request_obj: GetUsers) -> list[PrivateUser]:
+    raw_users = await get_users_from_db(users_ids=request_obj.users_ids)
+    users_objs = await many_sqlalchemy_to_pydantic(
+        sqlalchemy_models=raw_users,
+        pydantic_model=PrivateUser
+    )
+
+    return users_objs
+
+
+async def process_search_users(request_obj: SearchUser) -> list[PublicUser]:
+    raw_users = await get_users_by_nickname_from_db(search_params=request_obj)
     users_objs = await many_sqlalchemy_to_pydantic(
         sqlalchemy_models=raw_users,
         pydantic_model=PublicUser
@@ -35,19 +88,55 @@ async def update_profile(user_id: int, profile: UpdateUser) -> None:
 
 
 async def update_avatar(user_id: int, avatar: UploadFile) -> None:
-    async def _update_avatar():
-        if avatar is not None:
-            FileManager.validate_image(file=avatar)
-            avatar_save_path = generic_settings.MEDIA_FOLDER / "avatars" / str(user_id)
-            FileManager.write_file(path=avatar_save_path, content=await avatar.read())
 
-    await _update_avatar()
+    async def save_avatar_to_file():
+        FileManager.validate_image(file=avatar)
+        avatar_save_path = generic_settings.MEDIA_FOLDER / "avatars" / avatar_name
+        FileManager.write_file(path=avatar_save_path, content=await avatar.read())
+
+    avatar_name = f"{user_id}.{avatar.filename.split('.')[-1]}"
+    await save_avatar_to_file()
+    await update_user_in_db(
+        user_id=user_id,
+        user_data=UpdateUserExtended(
+            avatar_name=avatar_name,
+            avatar_type=avatar.content_type
+        )
+    )
 
 
-async def get_avatars(users_ids: list[int]) -> BytesIO:
-    avatars_paths = [generic_settings.MEDIA_FOLDER / "avatars" / str(user_id) for user_id in users_ids]
-    zip_obj = FileManager().archive_files(paths=avatars_paths)
-    return zip_obj
+async def get_avatar_path(user_id: int) -> Path:
+    user_obj = await get_private_user(user_id=user_id)
+    filepath = generic_settings.MEDIA_FOLDER / "avatars" / f"{user_obj.avatar_name}"
+    if not FileManager.file_exists(path=filepath):
+        raise FileNotFound()
+
+    return filepath
+
+
+async def get_avatars_paths(users_ids: list[int]) -> list[Path]:
+    avatars_paths = list()
+    avatar_base_path = generic_settings.MEDIA_FOLDER / "avatars"
+    users_objects = await get_private_users(
+        request_obj=GetUsers(
+            users_ids=users_ids
+        )
+    )
+    for user_obj in users_objects:
+        if user_obj.avatar_name is None:
+            continue
+
+        avatars_paths.append(avatar_base_path / user_obj.avatar_name)
+
+    if not avatars_paths:
+        raise FileNotFound()
+
+    return avatars_paths
+
+
+async def delete_avatar(user_id: int, avatar_path: Path) -> None:
+    FileManager.delete_file(path=avatar_path)
+    await delete_user_avatar_in_db(user_id=user_id)
 
 
 async def users_online(user_ids: UserOnline) -> list[UserOnlineExtended]:

@@ -20,6 +20,8 @@ class Users(OrmBase):
     nickname: Mapped[str] = mapped_column(String(128), index=True, nullable=False)
     birthday: Mapped[date] = mapped_column(nullable=True)
     bio: Mapped[text_not_required_type]
+    avatar_name: Mapped[text_not_required_type]
+    avatar_type: Mapped[text_not_required_type]
     last_online: Mapped[datetime_not_required_type]
     created_at: Mapped[datetime_auto_set]
     updated_at: Mapped[datetime_auto_update]

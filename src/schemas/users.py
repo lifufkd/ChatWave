@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field, model_validator, field_validator
 from typing import Annotated, Optional
 from datetime import datetime, date
-from utilities import validate_password, validate_nicknames, validate_nicknames_and_ids, request_limit
+from utilities import validate_password, validate_nicknames, request_limit
 
 
 class AnswerLimit(BaseModel):
@@ -48,6 +48,8 @@ class PublicUser(BaseModel):
 
 class PrivateUser(PublicUser):
     username: Annotated[str, Field(min_length=3, max_length=64)]
+    avatar_name: Optional[str]
+    avatar_type: Optional[str]
     updated_at: Optional[datetime]
 
 
@@ -64,21 +66,22 @@ class UpdateUser(BaseModel):
 
 class UpdateUserExtended(UpdateUser):
     password_hash: Annotated[Optional[str], Field(None)]
+    avatar_name: Annotated[Optional[str], Field(None)]
+    avatar_type: Annotated[Optional[str], Field(None)]
 
 
 class SearchUser(AnswerLimit):
-    ids: Annotated[Optional[list[int]], Field(None)]
-    nickname: Annotated[Optional[str], Field(None)]
+    nickname: Annotated[str, Field(min_length=3, max_length=128)]
 
     @field_validator('nickname', mode='before')
     def validate_nicknames(cls, value):
         return validate_nicknames(value)
 
-    @model_validator(mode='before')
-    def check_only_one_field_filled(cls, values):
-        return validate_nicknames_and_ids(values)
 
-    @field_validator('ids', mode='after')
+class GetUsers(BaseModel):
+    users_ids: list[int]
+
+    @field_validator('users_ids', mode='after')
     def set_limits(cls, values):
         return request_limit(values)
 

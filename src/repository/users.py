@@ -42,10 +42,11 @@ async def insert_user_in_db(user_data: CreateUserExtended) -> None:
         await cursor.commit()
 
 
-async def get_private_user_from_db(user_id: int) -> Users:
+async def get_user_from_db(user_id: int) -> Users:
     async with session() as cursor:
         query = (
             select(Users)
+            .options(selectinload(Users.conversations))
             .filter_by(id=user_id)
         )
         raw_data = await cursor.execute(query)
@@ -54,32 +55,38 @@ async def get_private_user_from_db(user_id: int) -> Users:
         return raw_data
 
 
-async def get_public_users_from_db(search_params: SearchUser) -> list[Users]:
+async def get_users_from_db(users_ids: list[int]) -> list[Users]:
+    async with session() as cursor:
+        query = (
+            select(Users)
+            .options(selectinload(Users.conversations))
+            .filter(Users.id.in_(users_ids))
+        )
+        raw_data = await cursor.execute(query)
+        raw_data = raw_data.scalars().all()
 
-    def query_builder():
-        if search_params.ids is not None:
+        return raw_data
+
+
+async def get_users_by_nickname_from_db(search_params: SearchUser) -> list[Users]:
+
+    async def query_builder():
+        if search_params.limit == 0:
             _query = (
                 select(Users)
-                .filter(Users.id.in_(search_params.ids))
+                .filter(Users.nickname.icontains(search_params.nickname))
             )
-            return _query
-        elif search_params.nickname is not None:
-            if search_params.limit == 0:
-                _query = (
-                    select(Users)
-                    .filter(Users.nickname.icontains(search_params.nickname))
-                )
-            else:
-                _query = (
-                    select(Users)
-                    .filter(Users.nickname.icontains(search_params.nickname))
-                    .limit(search_params.limit)
-                )
+        else:
+            _query = (
+                select(Users)
+                .filter(Users.nickname.icontains(search_params.nickname))
+                .limit(search_params.limit)
+            )
 
-            return _query
+        return _query
 
     async with session() as cursor:
-        query = query_builder()
+        query = await query_builder()
         raw_data = await cursor.execute(query)
         raw_data = raw_data.scalars().all()
 
@@ -92,6 +99,20 @@ async def update_user_in_db(user_id: int, user_data: UpdateUserExtended) -> None
             update(Users)
             .filter_by(id=user_id)
             .values(**user_data.model_dump(exclude_none=True, exclude={"password"}))
+        )
+        await cursor.execute(query)
+        await cursor.commit()
+
+
+async def delete_user_avatar_in_db(user_id: int) -> None:
+    async with session() as cursor:
+        query = (
+            update(Users)
+            .filter_by(id=user_id)
+            .values(
+                avatar_name=None,
+                avatar_type=None
+            )
         )
         await cursor.execute(query)
         await cursor.commit()
@@ -118,14 +139,3 @@ async def get_users_online_from_db(users: UserOnline) -> list[tuple[int, datetim
         raw_data = raw_data.all()
 
         return raw_data
-
-
-async def get_user_conversations_from_db(user_id: int) -> Users:
-    async with session() as cursor:
-        query = (
-            select(Users)
-            .options(selectinload(Users.conversations))
-            .filter_by(id=user_id)
-        )
-        raw_data = await cursor.execute(query)
-        return raw_data.scalar()
