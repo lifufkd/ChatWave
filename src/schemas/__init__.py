@@ -10,5 +10,6 @@ from .users import (
     Avatars,
     UserOnline,
     UserOnlineExtended,
+    GetUsers,
 )
-from .conversations import CreateGroup
+from .conversations import CreateGroup, EditConversation, EditConversationExtended, GroupsAvatars
