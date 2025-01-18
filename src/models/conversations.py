@@ -15,6 +15,8 @@ class Conversations(OrmBase):
     type: Mapped[ConversationTypes] = mapped_column(index=True)
     name: Mapped[str] = mapped_column(String(64), nullable=True)
     description: Mapped[text_not_required_type]
+    avatar_name: Mapped[text_not_required_type]
+    avatar_type: Mapped[text_not_required_type]
     created_at: Mapped[datetime_auto_set]
     updated_at: Mapped[datetime] = mapped_column(
         onupdate=text("TIMEZONE('utc', now())"),
