@@ -10,7 +10,8 @@ credential_exception = HTTPException(
 
 
 class UserNotFoundError(Exception):
-    pass
+    def __init__(self, detail: str = ""):
+        super().__init__(detail)
 
 
 class ConversationNotFoundError(Exception):
@@ -65,3 +66,8 @@ class SameUsersIds(Exception):
 
 class FileNotFound(Exception):
     pass
+
+
+class UserAlreadyInConversation(Exception):
+    def __init__(self, detail: str = ""):
+        super().__init__(detail)
