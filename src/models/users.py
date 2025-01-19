@@ -26,8 +26,6 @@ class Users(OrmBase):
     created_at: Mapped[datetime_auto_set]
     updated_at: Mapped[datetime_auto_update]
 
-    blocked_user: Mapped[list["BlockedUsers"]] = relationship(foreign_keys="BlockedUsers.blocker_id")
-    blocker_user: Mapped[list["BlockedUsers"]] = relationship(foreign_keys="BlockedUsers.blocker_id")
     owned_conversations: Mapped[list["Conversations"]] = relationship(
         back_populates="creator"
     )
