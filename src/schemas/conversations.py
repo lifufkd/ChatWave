@@ -28,3 +28,12 @@ class EditConversationExtended(EditConversation):
 
 class GroupsAvatars(UserIds):
     pass
+
+
+class AddMembersToConversation(BaseModel):
+    group_id: int
+    users_ids: list[int]
+
+    @field_validator('users_ids', mode='after')
+    def set_limits(cls, values):
+        return request_limit(values)

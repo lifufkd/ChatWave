@@ -10,9 +10,10 @@ from services import (
     update_group_avatar,
     get_group_avatar_path,
     get_groups_avatars_paths,
-    delete_group_avatar
+    delete_group_avatar,
+    add_members_to_conversation
 )
-from schemas import CreateGroup, EditConversation, GroupsAvatars
+from schemas import CreateGroup, EditConversation, GroupsAvatars, AddMembersToConversation
 from utilities import (
     UserNotFoundError,
     ChatAlreadyExists,
@@ -21,7 +22,13 @@ from utilities import (
     IsNotAGroupError,
     ConversationMemberRoles,
     ConversationNotFoundError,
-    AccessDeniedError, InvalidFileType, FIleToBig, ImageCorrupted, FileNotFound, FileManager
+    AccessDeniedError,
+    InvalidFileType,
+    FIleToBig,
+    ImageCorrupted,
+    FileNotFound,
+    FileManager,
+    UserAlreadyInConversation
 )
 
 conversations_router = APIRouter(
@@ -75,6 +82,25 @@ async def update_group_endpoint(current_user_id: Annotated[int, Depends(verify_t
                             detail="You does not have permission to perform this operation")
 
 
+@conversations_router.post("/members", status_code=status.HTTP_200_OK, response_model=dict)
+async def add_members_to_conversation_endpoint(current_user_id: Annotated[int, Depends(verify_token)], request: AddMembersToConversation):
+    try:
+        await add_members_to_conversation(current_user_id=current_user_id, request_data=request)
+    except UserNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    except ConversationNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found")
+    except IsNotAGroupError:
+        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Conversation not a group")
+    except UserAlreadyInConversation:
+        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="User already in group")
+    except AccessDeniedError:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="You does not have permission to perform this operation")
+
+    return {"detail": "Members added successfully"}
+
+
 @conversations_router.put("/avatar", status_code=status.HTTP_204_NO_CONTENT)
 async def update_my_group_avatar_endpoint(current_user_id: Annotated[int, Depends(verify_token)], group_id: int, avatar: UploadFile = File()):
     try:
@@ -100,7 +126,6 @@ async def update_my_group_avatar_endpoint(current_user_id: Annotated[int, Depend
 async def delete_my_group_avatar_endpoint(current_user_id: Annotated[int, Depends(verify_token)], group_id: int):
     try:
         filepath = await get_group_avatar_path(current_user_id=current_user_id, group_id=group_id)
-        print(filepath)
         await delete_group_avatar(
             current_user_id=current_user_id,
             group_id=group_id,

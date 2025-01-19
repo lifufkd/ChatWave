@@ -1,4 +1,5 @@
 from sqlalchemy import select, update
+from sqlalchemy.orm import selectinload
 
 from models import Conversations, Users
 from database import session
@@ -40,6 +41,7 @@ async def get_conversation_from_db(conversation_id: int) -> Conversations:
     async with session() as cursor:
         query = (
             select(Conversations)
+            .options(selectinload(Conversations.members))
             .filter_by(id=conversation_id)
         )
         result = await cursor.execute(query)
@@ -50,6 +52,7 @@ async def get_conversations_from_db(conversations_ids: list[int]) -> list[Conver
     async with session() as cursor:
         query = (
             select(Conversations)
+            .options(selectinload(Conversations.members))
             .filter(Conversations.id.in_(conversations_ids))
         )
         result = await cursor.execute(query)

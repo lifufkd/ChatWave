@@ -24,9 +24,13 @@ from utilities import (
     IsNotAGroupError,
     ConversationMemberRoles,
     ConversationNotFoundError,
-    AccessDeniedError, FileManager, generic_settings, FileNotFound
+    AccessDeniedError,
+    FileManager,
+    generic_settings,
+    FileNotFound,
+    UserAlreadyInConversation
 )
-from schemas import CreateGroup, EditConversation, EditConversationExtended, GroupsAvatars
+from schemas import CreateGroup, EditConversation, EditConversationExtended, GroupsAvatars, AddMembersToConversation
 
 
 async def get_conversations_ids(user_obj: Users) -> list[int]:
@@ -105,6 +109,30 @@ async def update_conversation(current_user_id: int, group_id: int, group_obj: Ed
     await update_conversation_in_db(
         conversation_id=group_id,
         conversation_obj=edit_conversation_extended_obj
+    )
+
+
+async def add_members_to_conversation(current_user_id: int, request_data: AddMembersToConversation):
+    await validate_group(current_user_id, request_data.group_id)
+    if (await get_conversation_member_role_from_db(user_id=current_user_id, conversation_id=request_data.group_id)) == ConversationMemberRoles.MEMBER:
+        raise AccessDeniedError()
+
+    users_objs = list()
+    for user_id in request_data.users_ids:
+        user_obj = await get_user_from_db(user_id=user_id)
+        if user_obj is None:
+            raise UserNotFoundError(detail=f"User with id {user_id} not found")
+
+        user_conversations_ids = await get_conversations_ids(user_obj)
+        if request_data.group_id in user_conversations_ids:
+            raise UserAlreadyInConversation(detail=f"User with id {user_id} already in group")
+
+        users_objs.append(user_obj)
+
+    await add_conversation_members_in_db(
+        users_objects=users_objs,
+        conversation_id=request_data.group_id,
+        role=ConversationMemberRoles.MEMBER
     )
 
 
