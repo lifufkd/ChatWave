@@ -12,4 +12,10 @@ from .users import (
     UserOnlineExtended,
     GetUsers,
 )
-from .conversations import CreateGroup, EditConversation, EditConversationExtended, GroupsAvatars
+from .conversations import (
+    CreateGroup,
+    EditConversation,
+    EditConversationExtended,
+    GroupsAvatars,
+    AddMembersToConversation
+)

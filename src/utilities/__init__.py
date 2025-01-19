@@ -29,7 +29,8 @@ from .exceptions_storage import (
     ConversationNotFoundError,
     AccessDeniedError,
     IsNotAGroupError,
-    IsNotAChatError
+    IsNotAChatError,
+    UserAlreadyInConversation
 )
 from .file_manager import FileManager
 from .validators import validate_password, validate_nicknames, request_limit, ValidateModelNotEmpty

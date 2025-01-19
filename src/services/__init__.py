@@ -17,5 +17,6 @@ from .conversations import (
     update_group_avatar,
     get_group_avatar_path,
     get_groups_avatars_paths,
-    delete_group_avatar
+    delete_group_avatar,
+    add_members_to_conversation
 )
