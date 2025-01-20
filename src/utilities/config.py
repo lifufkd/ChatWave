@@ -43,8 +43,37 @@ class JWTSettings(BaseSettings):
 
 class GenericSettings(BaseSettings):
     MEDIA_FOLDER: Path
-    ALLOWED_MEDIA_TYPES: list[str] = ["image/jpeg", "image/png"]
-    MAX_UPLOAD_SIZE: int = 30
+    ALLOWED_IMAGE_TYPES: list[str] = [
+        "image/jpeg",
+        "image/png"
+    ]
+    ALLOWED_VIDEO_TYPES: list[str] = [
+        "video/mp4",
+        "video/webm",
+        "video/ogg",
+        "video/avi",
+        "video/mkv",
+        "video/quicktime",
+        "video/x-msvideo",
+        "video/x-flv",
+        "video/x-matroska"
+    ]
+    ALLOWED_AUDIO_TYPES: list[str] = [
+        "audio/mpeg",
+        "audio/wav",
+        "audio/ogg",
+        "audio/webm",
+        "audio/aac",
+        "audio/flac",
+        "audio/x-wav",
+        "audio/x-m4a",
+        "audio/x-flac",
+        "audio/mp4"
+    ]
+    MAX_UPLOAD_IMAGE_SIZE: int = 30
+    MAX_UPLOAD_VIDEO_SIZE: int = 8192
+    MAX_UPLOAD_AUDIO_SIZE: int = 512
+    MAX_UPLOAD_FILE_SIZE: int = 16384
     MAX_ITEMS_PER_REQUEST: int = 100
 
     class Config:
