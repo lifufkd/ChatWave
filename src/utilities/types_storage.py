@@ -28,6 +28,7 @@ class ConversationTypes(Enum):
 
 
 class MessagesStatus(Enum):
+    CREATED = 'created'
     SENT = 'sent'
     DELIVERED = 'delivered'
     READ = 'read'
