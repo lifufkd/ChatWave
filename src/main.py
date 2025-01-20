@@ -10,7 +10,8 @@ from routes import (
     users_router,
     conversations_router,
     anonymous_users_router,
-    anonymous_conversations_router
+    anonymous_conversations_router,
+    messages_router
 )
 from utilities import FileManager
 
@@ -33,3 +34,5 @@ app.include_router(anonymous_users_router)
 app.include_router(anonymous_conversations_router)
 
 app.include_router(conversations_router)
+
+app.include_router(messages_router)
