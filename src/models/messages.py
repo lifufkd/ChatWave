@@ -22,9 +22,10 @@ class Messages(OrmBase):
         ForeignKey('users.id'),
     )
     status: Mapped[MessagesStatus] = mapped_column()
-    type: Mapped[MessagesTypes]
+    type: Mapped[MessagesTypes] = mapped_column(nullable=True)
     content: Mapped[text_not_required_type]
-    content_url: Mapped[text_not_required_type]
+    file_content_name: Mapped[text_not_required_type]
+    file_content_type: Mapped[text_not_required_type]
     created_at: Mapped[datetime] = mapped_column(
         server_default=text("TIMEZONE('utc', now())"),
         index=True,
