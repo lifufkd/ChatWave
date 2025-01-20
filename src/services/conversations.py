@@ -28,7 +28,8 @@ from utilities import (
     FileManager,
     generic_settings,
     FileNotFound,
-    UserAlreadyInConversation
+    UserAlreadyInConversation,
+    MessagesTypes
 )
 from schemas import CreateGroup, EditConversation, EditConversationExtended, GroupsAvatars, AddMembersToConversation
 
@@ -139,7 +140,11 @@ async def add_members_to_conversation(current_user_id: int, request_data: AddMem
 async def update_group_avatar(current_user_id: int, group_id: int, avatar: UploadFile) -> None:
 
     async def save_avatar_to_file():
-        FileManager.validate_image(file=avatar)
+        FileManager().validate_file(
+            file_content=await avatar.read(),
+            file_type=avatar.content_type,
+            file_type_filter=MessagesTypes.IMAGE
+        )
         avatar_save_path = generic_settings.MEDIA_FOLDER / "groups" / "avatars" / avatar_name
         FileManager.write_file(path=avatar_save_path, content=await avatar.read())
 

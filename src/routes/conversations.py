@@ -67,7 +67,7 @@ async def create_group_endpoint(current_user_id: Annotated[int, Depends(verify_t
     return {"detail": "Group created successfully"}
 
 
-@conversations_router.patch("/group", status_code=status.HTTP_204_NO_CONTENT)
+@conversations_router.patch("/{group_id}/group", status_code=status.HTTP_204_NO_CONTENT)
 async def update_group_endpoint(current_user_id: Annotated[int, Depends(verify_token)], group_id: int, group_data: EditConversation):
     try:
         await update_conversation(current_user_id=current_user_id, group_id=group_id, group_obj=group_data)
@@ -101,7 +101,7 @@ async def add_members_to_conversation_endpoint(current_user_id: Annotated[int, D
     return {"detail": "Members added successfully"}
 
 
-@conversations_router.put("/avatar", status_code=status.HTTP_204_NO_CONTENT)
+@conversations_router.put("/{group_id}/avatar", status_code=status.HTTP_204_NO_CONTENT)
 async def update_my_group_avatar_endpoint(current_user_id: Annotated[int, Depends(verify_token)], group_id: int, avatar: UploadFile = File()):
     try:
         await update_group_avatar(current_user_id=current_user_id, group_id=group_id, avatar=avatar)
@@ -122,7 +122,7 @@ async def update_my_group_avatar_endpoint(current_user_id: Annotated[int, Depend
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@conversations_router.delete("/avatar", status_code=status.HTTP_202_ACCEPTED)
+@conversations_router.delete("/{group_id}/avatar", status_code=status.HTTP_202_ACCEPTED)
 async def delete_my_group_avatar_endpoint(current_user_id: Annotated[int, Depends(verify_token)], group_id: int):
     try:
         filepath = await get_group_avatar_path(current_user_id=current_user_id, group_id=group_id)
