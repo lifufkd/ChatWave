@@ -30,7 +30,8 @@ from .exceptions_storage import (
     AccessDeniedError,
     IsNotAGroupError,
     IsNotAChatError,
-    UserAlreadyInConversation
+    UserAlreadyInConversation,
+    MessageNotFound
 )
 from .file_manager import FileManager
 from .validators import validate_password, validate_nicknames, request_limit, ValidateModelNotEmpty

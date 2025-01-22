@@ -21,5 +21,15 @@ from .conversations import (
     delete_conversation_avatar_from_db
 )
 from .conversations_members import add_conversation_members_in_db, get_conversation_member_role_from_db
-from .messages import insert_text_message_to_db, insert_empty_message, insert_media_message_to_db
+from .messages import (
+    insert_text_message_to_db,
+    insert_empty_message,
+    insert_media_message_to_db,
+    check_message_is_existed,
+    get_message_from_db,
+    update_message_in_db,
+    check_messages_is_existed,
+    get_messages_from_db,
+    fetch_filtered_messages_from_db
+)
 

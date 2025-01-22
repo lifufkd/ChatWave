@@ -19,4 +19,12 @@ from .conversations import (
     GroupsAvatars,
     AddMembersToConversation
 )
-from .messages import CreateTextMessage, CreateTextMessageExtended, CreateMediaMessage, CreateMediaMessageDB
+from .messages import (
+    CreateTextMessage,
+    CreateTextMessageExtended,
+    CreateMediaMessage,
+    CreateMediaMessageDB,
+    UpdateMessage,
+    GetMessages,
+    MessagesIds
+)

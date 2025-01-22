@@ -20,4 +20,11 @@ from .conversations import (
     delete_group_avatar,
     add_members_to_conversation
 )
-from .messages import create_text_message, create_media_message
+from .messages import (
+    create_text_message,
+    create_media_message,
+    update_message,
+    get_messages,
+    get_message_media_path,
+    get_messages_media_paths
+)
