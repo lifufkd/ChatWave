@@ -48,17 +48,13 @@ class FileManager:
     def archive_files(self, paths: list[Path]) -> io.BytesIO:
         zip_buffer = io.BytesIO()
         with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
-            for avatar_path in paths:
-                if self.file_exists(avatar_path):
-                    zip_file.write(avatar_path, arcname=avatar_path.name)
+            for file_path in paths:
+                if self.file_exists(file_path):
+                    zip_file.write(file_path, arcname=file_path.name)
 
         zip_buffer.seek(0)
 
         return zip_buffer
-
-    def pack_to_zip_files(self, paths: list[Path]) -> io.BytesIO:
-        zip_obj = self.archive_files(paths=paths)
-        return zip_obj
 
     @staticmethod
     def calculate_file_size(file: bytes) -> float:
