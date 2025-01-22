@@ -1,7 +1,24 @@
-from dependencies import validate_user_in_conversation
-from repository import insert_text_message_to_db, insert_empty_message, insert_media_message_to_db
-from schemas import CreateTextMessage, CreateTextMessageExtended, CreateMediaMessage, CreateMediaMessageDB
-from utilities import MessagesStatus, MessagesTypes, FileManager, generic_settings
+from pathlib import Path
+
+from dependencies import validate_user_in_conversation, validate_user_is_message_owner, \
+    validate_user_have_access_to_message, validate_user_have_access_to_messages
+from repository import (
+    insert_text_message_to_db,
+    insert_empty_message,
+    insert_media_message_to_db,
+    update_message_in_db,
+    fetch_filtered_messages_from_db, get_message_from_db, get_messages_from_db
+)
+from schemas import (
+    CreateTextMessage,
+    CreateTextMessageExtended,
+    CreateMediaMessage,
+    CreateMediaMessageDB,
+    UpdateMessage,
+    GetMessages
+)
+from utilities import MessagesStatus, MessagesTypes, FileManager, generic_settings, many_sqlalchemy_to_pydantic, \
+    FileNotFound
 
 
 async def create_text_message(sender_id: int, conversation_id: int, content: CreateTextMessage):
@@ -56,7 +73,8 @@ async def create_media_message(sender_id: int, conversation_id: int, content: Cr
         file_content_name=file_name,
         file_content_type=content.file_type,
         status=MessagesStatus.SENT,
-        type=message_type
+        type=message_type,
+        content=content.caption
     )
 
     await save_media_to_file()
@@ -64,4 +82,65 @@ async def create_media_message(sender_id: int, conversation_id: int, content: Cr
         message_id=message_id,
         message_data=create_media_message_extended_obj
     )
+
+
+async def update_message(sender_id: int, message_id: int, message_data: UpdateMessage):
+    await validate_user_is_message_owner(user_id=sender_id, message_id=message_id)
+
+    await update_message_in_db(
+        message_id=message_id,
+        message_data=message_data
+    )
+
+
+async def get_messages(sender_id: int, conversation_id: int, limit: int, offset: int) -> list[GetMessages]:
+    await validate_user_in_conversation(user_id=sender_id, conversation_id=conversation_id)
+
+    raw_messages = await fetch_filtered_messages_from_db(
+        conversation_id=conversation_id,
+        limit=limit,
+        offset=offset
+    )
+    messages_objs = await many_sqlalchemy_to_pydantic(
+        sqlalchemy_models=raw_messages,
+        pydantic_model=GetMessages
+    )
+
+    return messages_objs
+
+
+async def get_message_media_path(sender_id: int, message_id: int) -> Path:
+    await validate_user_have_access_to_message(user_id=sender_id, message_id=message_id)
+
+    message_obj = await get_message_from_db(message_id=message_id)
+    filepath = generic_settings.MEDIA_FOLDER / "messages" / f"{message_obj.file_content_name}"
+    if not FileManager.file_exists(path=filepath):
+        raise FileNotFound()
+
+    return filepath
+
+
+async def get_messages_media_paths(sender_id: int, messages_ids: list[int]) -> list[Path]:
+    await validate_user_have_access_to_messages(user_id=sender_id, messages_ids=messages_ids)
+
+    messages_paths = list()
+    avatar_base_path = generic_settings.MEDIA_FOLDER / "messages"
+    raw_messages = await get_messages_from_db(
+        messages_ids=messages_ids
+    )
+    messages_objs = await many_sqlalchemy_to_pydantic(
+        sqlalchemy_models=raw_messages,
+        pydantic_model=GetMessages
+    )
+    for message_obj in messages_objs:
+        if message_obj.file_content_name is None:
+            continue
+
+        messages_paths.append(avatar_base_path / message_obj.file_content_name)
+
+    if not messages_paths:
+        raise FileNotFound()
+
+    return messages_paths
+
 
