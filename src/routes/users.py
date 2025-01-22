@@ -71,7 +71,7 @@ async def get_avatars_endpoint(avatars: Avatars = Query()):
     except FileNotFound:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
 
-    zip_obj = FileManager().pack_to_zip_files(avatars_paths)
+    zip_obj = FileManager().archive_files(avatars_paths)
     return StreamingResponse(zip_obj, media_type="application/zip")
 
 
