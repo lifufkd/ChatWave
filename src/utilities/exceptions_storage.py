@@ -71,3 +71,7 @@ class FileNotFound(Exception):
 class UserAlreadyInConversation(Exception):
     def __init__(self, detail: str = ""):
         super().__init__(detail)
+
+
+class MessageNotFound(Exception):
+    pass
