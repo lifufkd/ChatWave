@@ -179,5 +179,5 @@ async def get_my_groups_avatars_endpoint(current_user_id: Annotated[int, Depends
     except FileNotFound:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
 
-    zip_obj = FileManager().pack_to_zip_files(avatars_paths)
+    zip_obj = FileManager().archive_files(avatars_paths)
     return StreamingResponse(zip_obj, media_type="application/zip")
