@@ -19,7 +19,8 @@ from .conversations import (
     GroupsAvatars,
     AddMembersToConversation,
     GetConversations,
-    GetConversationsExtended
+    GetConversationsExtended,
+    DeleteGroupMembers
 )
 from .messages import (
     CreateTextMessage,

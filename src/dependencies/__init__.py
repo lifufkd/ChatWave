@@ -5,7 +5,8 @@ from .conversations import (
     validate_user_in_conversations,
     validate_user_in_chat,
     validate_user_in_group,
-    validate_user_can_manage_group
+    validate_user_can_manage_group,
+    validate_user_can_manage_conversation
 )
 from .messages import (
     validate_user_is_message_owner,

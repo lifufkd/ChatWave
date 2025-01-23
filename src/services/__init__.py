@@ -20,7 +20,8 @@ from .conversations import (
     get_groups_avatars_paths,
     delete_group_avatar,
     add_members_to_conversation,
-    delete_members_from_group
+    delete_members_from_group,
+    delete_conversation
 )
 from .messages import (
     create_text_message,
