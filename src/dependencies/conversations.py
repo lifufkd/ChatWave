@@ -80,3 +80,21 @@ async def validate_user_can_manage_group(user_id: int, group_id: int) -> None:
 
     if user_role == ConversationMemberRoles.MEMBER:
         raise AccessDeniedError()
+
+
+async def validate_user_can_manage_conversation(user_id: int, conversation_id: int) -> None:
+    await conversation_is_existed(conversation_id=conversation_id)
+
+    conversation_obj = await get_conversation_from_db(conversation_id=conversation_id)
+    conversation_type = conversation_obj.type
+    user_role = await get_conversation_member_role_from_db(
+        user_id=user_id,
+        conversation_id=conversation_id
+    )
+
+    if user_role is None:
+        raise AccessDeniedError()
+
+    if conversation_type == ConversationTypes.GROUP:
+        if user_role == ConversationMemberRoles.MEMBER:
+            raise AccessDeniedError()

@@ -11,9 +11,9 @@ from services import (
     get_group_avatar_path,
     get_groups_avatars_paths,
     delete_group_avatar,
-    add_members_to_conversation, delete_all_messages, delete_members_from_group
+    add_members_to_conversation, delete_all_messages, delete_members_from_group, delete_conversation
 )
-from schemas import CreateGroup, EditConversation, GroupsAvatars, AddMembersToConversation
+from schemas import CreateGroup, EditConversation, GroupsAvatars, AddMembersToConversation, DeleteGroupMembers
 from utilities import (
     UserNotFoundError,
     ChatAlreadyExists,
@@ -183,17 +183,17 @@ async def get_my_groups_avatars_endpoint(current_user_id: Annotated[int, Depends
     return StreamingResponse(zip_obj, media_type="application/zip")
 
 
-@conversations_router.delete("/{group_id}", status_code=status.HTTP_202_ACCEPTED)
+@conversations_router.delete("/{group_id}/members", status_code=status.HTTP_202_ACCEPTED)
 async def delete_members_from_my_group(
         current_user_id: Annotated[int, Depends(verify_token)],
         group_id: int,
-        members_ids: list[int] = Query()
+        members: list[DeleteGroupMembers]
 ):
     try:
         await delete_members_from_group(
             current_user_id=current_user_id,
             group_id=group_id,
-            members_ids=members_ids
+            members=members
         )
     except UserNotFoundError:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
@@ -203,6 +203,22 @@ async def delete_members_from_my_group(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Chat not found")
     except IsNotAGroupError:
         raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Conversation not a group")
+    except AccessDeniedError:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="You does not have permission to perform this operation")
+
+
+@conversations_router.delete("/{conversation_id}", status_code=status.HTTP_202_ACCEPTED)
+async def delete_conversation_endpoint(
+        current_user_id: Annotated[int, Depends(verify_token)],
+        conversation_id: int
+):
+    try:
+        await delete_conversation(current_user_id=current_user_id, conversation_id=conversation_id)
+    except UserNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    except ConversationNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Chat not found")
     except AccessDeniedError:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="You does not have permission to perform this operation")

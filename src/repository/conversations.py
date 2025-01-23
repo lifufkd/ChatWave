@@ -1,4 +1,4 @@
-from sqlalchemy import select, update
+from sqlalchemy import select, update, delete
 from sqlalchemy.orm import selectinload
 
 from models import Conversations, Users
@@ -82,4 +82,15 @@ async def update_conversation_in_db(conversation_id: int, conversation_obj: Edit
         )
         await cursor.execute(query)
         await cursor.commit()
+
+
+async def delete_conversation_in_db(conversation_id: int) -> None:
+    async with session() as cursor:
+        query = (
+            delete(Conversations)
+            .filter_by(id=conversation_id)
+        )
+        await cursor.execute(query)
+        await cursor.commit()
+
 

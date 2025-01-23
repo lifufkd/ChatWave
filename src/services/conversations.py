@@ -2,7 +2,8 @@ from io import BytesIO
 from pathlib import Path
 from fastapi import UploadFile
 
-from dependencies import validate_user_can_manage_group, validate_user_in_conversation
+from dependencies import validate_user_can_manage_group, validate_user_in_conversation, \
+    validate_user_can_manage_conversation
 from models import Users, Conversations
 from repository import (
     check_user_is_existed,
@@ -15,7 +16,8 @@ from repository import (
     check_is_conversation_existed,
     get_conversation_type,
     delete_conversation_avatar_from_db,
-    get_conversation_member_role_from_db, delete_conversation_members_in_db
+    get_conversation_member_role_from_db, delete_conversation_members_in_db, delete_conversation_in_db,
+    delete_sender_messages
 )
 from utilities import (
     UserNotFoundError,
@@ -32,7 +34,8 @@ from utilities import (
     UserAlreadyInConversation,
     MessagesTypes
 )
-from schemas import CreateGroup, EditConversation, EditConversationExtended, GroupsAvatars, AddMembersToConversation
+from schemas import CreateGroup, EditConversation, EditConversationExtended, GroupsAvatars, AddMembersToConversation, \
+    DeleteGroupMembers
 
 
 async def get_conversations_ids(user_obj: Users) -> list[int]:
@@ -215,16 +218,30 @@ async def delete_group_avatar(current_user_id: int, group_id: int,  avatar_path:
     await delete_conversation_avatar_from_db(conversation_id=group_id)
 
 
-async def delete_members_from_group(current_user_id: int, group_id: int, members_ids: list[int]) -> None:
+async def delete_members_from_group(current_user_id: int, group_id: int, members: list[DeleteGroupMembers]) -> None:
+    members_ids = [member.user_id for member in members]
+    members_ids_to_delete_messages = list()
     if current_user_id in members_ids:
         raise SameUsersIds()
 
     await validate_user_can_manage_group(user_id=current_user_id, group_id=group_id)
 
-    for member_id in members_ids:
-        await validate_user_in_conversation(user_id=member_id, conversation_id=group_id)
+    for member in members:
+        await validate_user_in_conversation(user_id=member.user_id, conversation_id=group_id)
+        if not member.delete_messages:
+            continue
+
+        members_ids_to_delete_messages.append(member.user_id)
 
     await delete_conversation_members_in_db(conversation_id=group_id, members_ids=members_ids)
+
+    await delete_sender_messages(conversation_id=group_id, members_ids=members_ids_to_delete_messages)
+
+
+async def delete_conversation(current_user_id: int, conversation_id: int) -> None:
+    await validate_user_can_manage_conversation(user_id=current_user_id, conversation_id=conversation_id)
+
+    await delete_conversation_in_db(conversation_id=conversation_id)
 
 
 

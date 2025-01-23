@@ -55,3 +55,8 @@ class GetConversations(BaseModel):
 
 class GetConversationsExtended(GetConversations):
     members_ids: list[int]
+
+
+class DeleteGroupMembers(BaseModel):
+    user_id: int
+    delete_messages: bool
