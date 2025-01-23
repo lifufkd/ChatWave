@@ -8,11 +8,11 @@ from utilities import ConversationMemberRoles, datetime_auto_set
 class ConversationMembers(OrmBase):
     __tablename__ = 'conversations_members'
     user_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id"),
+        ForeignKey("users.id", ondelete="CASCADE"),
         primary_key=True
     )
     conversation_id: Mapped[int] = mapped_column(
-        ForeignKey("conversations.id"),
+        ForeignKey("conversations.id", ondelete="CASCADE"),
         primary_key=True
     )
 
