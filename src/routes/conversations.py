@@ -11,7 +11,7 @@ from services import (
     get_group_avatar_path,
     get_groups_avatars_paths,
     delete_group_avatar,
-    add_members_to_conversation
+    add_members_to_conversation, delete_all_messages, delete_members_from_group
 )
 from schemas import CreateGroup, EditConversation, GroupsAvatars, AddMembersToConversation
 from utilities import (
@@ -28,7 +28,7 @@ from utilities import (
     ImageCorrupted,
     FileNotFound,
     FileManager,
-    UserAlreadyInConversation
+    UserAlreadyInConversation, IsNotAChatError
 )
 
 conversations_router = APIRouter(
@@ -181,3 +181,29 @@ async def get_my_groups_avatars_endpoint(current_user_id: Annotated[int, Depends
 
     zip_obj = FileManager().archive_files(avatars_paths)
     return StreamingResponse(zip_obj, media_type="application/zip")
+
+
+@conversations_router.delete("/{group_id}", status_code=status.HTTP_202_ACCEPTED)
+async def delete_members_from_my_group(
+        current_user_id: Annotated[int, Depends(verify_token)],
+        group_id: int,
+        members_ids: list[int] = Query()
+):
+    try:
+        await delete_members_from_group(
+            current_user_id=current_user_id,
+            group_id=group_id,
+            members_ids=members_ids
+        )
+    except UserNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    except SameUsersIds:
+        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="You can't delete yourself")
+    except ConversationNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Chat not found")
+    except IsNotAGroupError:
+        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Conversation not a group")
+    except AccessDeniedError:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="You does not have permission to perform this operation")
+

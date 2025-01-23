@@ -2,6 +2,7 @@ from io import BytesIO
 from pathlib import Path
 from fastapi import UploadFile
 
+from dependencies import validate_user_can_manage_group, validate_user_in_conversation
 from models import Users, Conversations
 from repository import (
     check_user_is_existed,
@@ -14,7 +15,7 @@ from repository import (
     check_is_conversation_existed,
     get_conversation_type,
     delete_conversation_avatar_from_db,
-    get_conversation_member_role_from_db
+    get_conversation_member_role_from_db, delete_conversation_members_in_db
 )
 from utilities import (
     UserNotFoundError,
@@ -212,6 +213,18 @@ async def delete_group_avatar(current_user_id: int, group_id: int,  avatar_path:
 
     FileManager.delete_file(path=avatar_path)
     await delete_conversation_avatar_from_db(conversation_id=group_id)
+
+
+async def delete_members_from_group(current_user_id: int, group_id: int, members_ids: list[int]) -> None:
+    if current_user_id in members_ids:
+        raise SameUsersIds()
+
+    await validate_user_can_manage_group(user_id=current_user_id, group_id=group_id)
+
+    for member_id in members_ids:
+        await validate_user_in_conversation(user_id=member_id, conversation_id=group_id)
+
+    await delete_conversation_members_in_db(conversation_id=group_id, members_ids=members_ids)
 
 
 
