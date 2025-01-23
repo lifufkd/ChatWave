@@ -150,3 +150,18 @@ async def delete_messages_from_db(messages_ids: list[int]) -> None:
         )
         await cursor.execute(query)
         await cursor.commit()
+
+
+async def delete_sender_messages(conversation_id: int, members_ids: list[int]) -> None:
+    async with session() as cursor:
+        query = (
+            delete(Messages)
+            .filter(
+                and_(
+                    Messages.conversation_id == conversation_id,
+                    Messages.sender_id.in_(members_ids)
+                )
+            )
+        )
+        await cursor.execute(query)
+        await cursor.commit()

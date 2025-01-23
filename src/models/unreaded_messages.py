@@ -9,17 +9,17 @@ class UnreadMessages(OrmBase):
     __tablename__ = 'unread_messages'
     id: Mapped[primary_key_type]
     conversation_id: Mapped[int] = mapped_column(
-        ForeignKey('conversations.id')
+        ForeignKey('conversations.id', ondelete="CASCADE")
     )
     user_id: Mapped[int] = mapped_column(
-        ForeignKey('users.id')
+        ForeignKey('users.id', ondelete="CASCADE")
     )
     message_id: Mapped[int] = mapped_column(
-        ForeignKey('messages.id'),
+        ForeignKey('messages.id', ondelete="CASCADE"),
         nullable=True
     )
     call_id: Mapped[int] = mapped_column(
-        ForeignKey('calls.id'),
+        ForeignKey('calls.id', ondelete="CASCADE"),
         nullable=True
     )
 

@@ -15,11 +15,11 @@ class Messages(OrmBase):
     __tablename__ = 'messages'
     id: Mapped[primary_key_type]
     conversation_id: Mapped[int] = mapped_column(
-        ForeignKey('conversations.id'),
+        ForeignKey('conversations.id', ondelete="CASCADE"),
         index=True
     )
     sender_id: Mapped[int] = mapped_column(
-        ForeignKey('users.id'),
+        ForeignKey('users.id', ondelete="CASCADE"),
     )
     status: Mapped[MessagesStatus] = mapped_column()
     type: Mapped[MessagesTypes] = mapped_column(nullable=True)
