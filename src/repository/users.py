@@ -46,7 +46,7 @@ async def get_user_from_db(user_id: int) -> Users:
     async with session() as cursor:
         query = (
             select(Users)
-            .options(selectinload(Users.conversations))
+            .options(selectinload(Users.conversations).selectinload(Conversations.members))
             .filter_by(id=user_id)
         )
         raw_data = await cursor.execute(query)
@@ -59,7 +59,7 @@ async def get_users_from_db(users_ids: list[int]) -> list[Users]:
     async with session() as cursor:
         query = (
             select(Users)
-            .options(selectinload(Users.conversations))
+            .options(selectinload(Users.conversations).selectinload(Conversations.members))
             .filter(Users.id.in_(users_ids))
         )
         raw_data = await cursor.execute(query)

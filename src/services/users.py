@@ -16,7 +16,7 @@ from schemas import (
     UpdateUserExtended,
     UserOnlineExtended,
     UserOnline,
-    GetUsers
+    GetUsers, GetConversations, GetConversationsExtended
 )
 from utilities import (
     sqlalchemy_to_pydantic,
@@ -77,6 +77,28 @@ async def process_search_users(request_obj: SearchUser) -> list[PublicUser]:
     )
 
     return users_objs
+
+
+async def get_conversations(current_user_id: int) -> list[GetConversationsExtended]:
+    result = list()
+    raw_user = await get_user_from_db(user_id=current_user_id)
+
+    for conversation_obj in raw_user.conversations:
+        members_ids = list()
+
+        for member in conversation_obj.members:
+            if member.id == current_user_id:
+                continue
+            members_ids.append(member.id)
+
+        part_obj = GetConversations.model_validate(conversation_obj, from_attributes=True)
+        full_obj = GetConversationsExtended(
+            members_ids=members_ids,
+            **part_obj.model_dump()
+        )
+        result.append(full_obj)
+
+    return result
 
 
 async def update_profile(user_id: int, profile: UpdateUser) -> None:

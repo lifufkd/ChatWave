@@ -3,7 +3,17 @@ from fastapi.responses import FileResponse, StreamingResponse
 from fastapi_cache.decorator import cache
 from typing import Annotated
 
-from schemas import PrivateUser, UpdateUser, PublicUser, SearchUser, Avatars, UserOnline, UserOnlineExtended, GetUsers
+from schemas import (
+    PrivateUser,
+    UpdateUser,
+    PublicUser,
+    SearchUser,
+    Avatars,
+    UserOnline,
+    UserOnlineExtended,
+    GetUsers,
+    GetConversations, GetConversationsExtended
+)
 from dependencies import verify_token, update_user_last_online, verify_user_is_existed
 from services import (
     get_private_user,
@@ -14,7 +24,7 @@ from services import (
     users_online,
     get_avatar_path,
     delete_avatar,
-    process_search_users
+    process_search_users, get_conversations
 )
 from utilities import InvalidFileType, FIleToBig, ImageCorrupted, FileNotFound, FileManager
 
@@ -40,6 +50,15 @@ async def get_my_profile_endpoint(current_user_id: Annotated[int, Depends(verify
 @users_router.patch("/me", status_code=status.HTTP_204_NO_CONTENT)
 async def update_my_profile_endpoint(current_user_id: Annotated[int, Depends(verify_token)], profile_data: UpdateUser):
     await update_profile(user_id=current_user_id, profile=profile_data)
+
+
+@users_router.get("/conversations", status_code=status.HTTP_200_OK, response_model=list[GetConversationsExtended])
+async def get_my_conversations_endpoint(
+        current_user_id: Annotated[int, Depends(verify_token)]
+):
+    conversations_objs = await get_conversations(current_user_id=current_user_id)
+
+    return conversations_objs
 
 
 @users_router.put("/me/avatar", status_code=status.HTTP_204_NO_CONTENT)
