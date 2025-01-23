@@ -1,4 +1,4 @@
-from sqlalchemy import select, update, insert, and_, func
+from sqlalchemy import select, update, insert, and_, func, delete
 from sqlalchemy.orm import selectinload
 
 from models import Messages
@@ -105,6 +105,7 @@ async def get_messages_from_db(messages_ids: list[int]) -> list[Messages]:
     async with session() as cursor:
         query = (
             select(Messages)
+            .options(selectinload(Messages.conversation))
             .filter(Messages.id.in_(messages_ids))
         )
         result = await cursor.execute(query)
@@ -129,3 +130,23 @@ async def fetch_filtered_messages_from_db(conversation_id: int, limit: int, offs
         result = result.scalars().all()
 
         return result
+
+
+async def delete_conversation_messages_from_db(conversation_id: int) -> None:
+    async with session() as cursor:
+        query = (
+            delete(Messages)
+            .filter_by(conversation_id=conversation_id)
+        )
+        await cursor.execute(query)
+        await cursor.commit()
+
+
+async def delete_messages_from_db(messages_ids: list[int]) -> None:
+    async with session() as cursor:
+        query = (
+            delete(Messages)
+            .filter(Messages.id.in_(messages_ids))
+        )
+        await cursor.execute(query)
+        await cursor.commit()

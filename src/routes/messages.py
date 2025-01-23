@@ -7,10 +7,10 @@ from utilities import (
     ConversationNotFoundError,
     AccessDeniedError,
     InvalidFileType,
-    FIleToBig, ImageCorrupted, MessageNotFound, FileNotFound, FileManager,
+    FIleToBig, ImageCorrupted, MessageNotFound, FileNotFound, FileManager, IsNotAChatError,
 )
 from services import create_text_message, create_media_message, update_message, get_messages, get_message_media_path, \
-    get_messages_media_paths
+    get_messages_media_paths, delete_messages, delete_all_messages
 from schemas import CreateTextMessage, CreateMediaMessage, UpdateMessage, GetMessages, MessagesIds
 
 messages_router = APIRouter(
@@ -145,3 +145,36 @@ async def get_messages_endpoint(
                             detail="You does not have permission to perform this operation")
     except ConversationNotFoundError:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
+
+
+@messages_router.delete("", status_code=status.HTTP_202_ACCEPTED)
+async def delete_messages_endpoint(
+        current_user_id: Annotated[int, Depends(verify_token)],
+        messages_ids: list[int] = Query()
+):
+    try:
+        await delete_messages(current_user_id=current_user_id, messages_ids=messages_ids)
+    except MessageNotFound:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Message not found")
+    except AccessDeniedError:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="You does not have permission to perform this operation")
+    except ConversationNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
+
+
+@messages_router.delete("/{chat_id}", status_code=status.HTTP_202_ACCEPTED)
+async def delete_all_messages_from_chat(
+        current_user_id: Annotated[int, Depends(verify_token)],
+        chat_id: int
+):
+    try:
+        await delete_all_messages(current_user_id=current_user_id, chat_id=chat_id)
+    except ConversationNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Chat not found")
+    except IsNotAChatError:
+        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Is not a chat")
+    except AccessDeniedError:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="You does not have permission to perform this operation")
+
