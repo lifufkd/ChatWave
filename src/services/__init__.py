@@ -8,7 +8,8 @@ from .users import (
     users_online,
     get_avatar_path,
     delete_avatar,
-    process_search_users
+    process_search_users,
+    get_conversations
 )
 from .conversations import (
     add_chat_conversation,

@@ -17,7 +17,9 @@ from .conversations import (
     EditConversation,
     EditConversationExtended,
     GroupsAvatars,
-    AddMembersToConversation
+    AddMembersToConversation,
+    GetConversations,
+    GetConversationsExtended
 )
 from .messages import (
     CreateTextMessage,
