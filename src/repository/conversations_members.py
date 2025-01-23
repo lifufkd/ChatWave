@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import select, delete, and_
 from models import Conversations, Users, ConversationMembers
 from utilities import ConversationMemberRoles
 from database import session
@@ -17,7 +17,22 @@ async def add_conversation_members_in_db(users_objects: list[Users], conversatio
         await cursor.commit()
 
 
-async def get_conversation_member_role_from_db(user_id: int, conversation_id: int):
+async def delete_conversation_members_in_db(conversation_id: int, members_ids: list[int]) -> None:
+    async with session() as cursor:
+        query = (
+            delete(ConversationMembers)
+            .filter(
+                and_(
+                    ConversationMembers.conversation_id == conversation_id,
+                    ConversationMembers.user_id.in_(members_ids)
+                )
+            )
+        )
+        await cursor.execute(query)
+        await cursor.commit()
+
+
+async def get_conversation_member_role_from_db(user_id: int, conversation_id: int) -> ConversationMemberRoles:
     async with session() as cursor:
         query = (
             select(ConversationMembers.role)
