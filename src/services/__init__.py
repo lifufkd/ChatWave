@@ -19,7 +19,8 @@ from .conversations import (
     get_group_avatar_path,
     get_groups_avatars_paths,
     delete_group_avatar,
-    add_members_to_conversation
+    add_members_to_conversation,
+    delete_members_from_group
 )
 from .messages import (
     create_text_message,
@@ -27,5 +28,7 @@ from .messages import (
     update_message,
     get_messages,
     get_message_media_path,
-    get_messages_media_paths
+    get_messages_media_paths,
+    delete_all_messages,
+    delete_messages
 )
