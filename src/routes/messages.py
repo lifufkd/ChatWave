@@ -35,11 +35,7 @@ async def get_message_media_endpoint(
         current_user_id: Annotated[int, Depends(verify_token)],
         message_id: int
 ):
-    try:
-        filepath = await get_message_media_path(sender_id=current_user_id, message_id=message_id)
-    except FileNotFound:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
-
+    filepath = await get_message_media_path(sender_id=current_user_id, message_id=message_id)
     return FileResponse(filepath)
 
 
@@ -48,22 +44,12 @@ async def get_messages_medias_endpoint(
         current_user_id: Annotated[int, Depends(verify_token)],
         message_id: MessagesIds = Query()
 ):
-    try:
-        messages_media_paths = await get_messages_media_paths(
-            sender_id=current_user_id,
-            messages_ids=message_id.messages_ids
-        )
-        zip_obj = FileManager().archive_files(messages_media_paths)
-        return StreamingResponse(zip_obj, media_type="application/zip")
-    except FileNotFound:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
-    except MessageNotFound:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Message not found")
-    except AccessDeniedError:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail="You does not have permission to perform this operation")
-    except ConversationNotFoundError:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
+    messages_media_paths = await get_messages_media_paths(
+        sender_id=current_user_id,
+        messages_ids=message_id.messages_ids
+    )
+    zip_obj = FileManager().archive_files(messages_media_paths)
+    return StreamingResponse(zip_obj, media_type="application/zip")
 
 
 @messages_router.post("/{conversation_id}/text", status_code=status.HTTP_201_CREATED)
@@ -72,14 +58,7 @@ async def send_text_message_endpoint(
         conversation_id: int,
         content: CreateTextMessage
 ):
-    try:
-        await create_text_message(sender_id=current_user_id, conversation_id=conversation_id, content=content)
-    except ConversationNotFoundError:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
-    except AccessDeniedError:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail="You does not have permission to perform this operation")
-
+    await create_text_message(sender_id=current_user_id, conversation_id=conversation_id, content=content)
     return {"detail": "Message sent successfully"}
 
 
@@ -91,28 +70,14 @@ async def send_media_message_endpoint(
         caption: Optional[str] = Form(None),
         file: UploadFile = File()
 ):
-
-    try:
-        new_message_obj = CreateMediaMessage(
-            file=file.file.read(),
-            file_name=file.filename,
-            file_type=file.content_type,
-            caption=caption,
-            is_voice_message=is_voice_message
-        )
-        await create_media_message(sender_id=current_user_id, conversation_id=conversation_id, content=new_message_obj)
-    except ConversationNotFoundError:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
-    except AccessDeniedError:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail="You does not have permission to perform this operation")
-    except InvalidFileType as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    except FIleToBig as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    except ImageCorrupted as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-
+    new_message_obj = CreateMediaMessage(
+        file=file.file.read(),
+        file_name=file.filename,
+        file_type=file.content_type,
+        caption=caption,
+        is_voice_message=is_voice_message
+    )
+    await create_media_message(sender_id=current_user_id, conversation_id=conversation_id, content=new_message_obj)
     return {"detail": "Message sent successfully"}
 
 
@@ -122,16 +87,7 @@ async def update_message_endpoint(
         message_id: int,
         content: UpdateMessage
 ):
-    try:
-        await update_message(sender_id=current_user_id, message_id=message_id, message_data=content)
-    except MessageNotFound:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Message not found")
-    except AccessDeniedError:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail="You does not have permission to perform this operation")
-    except ConversationNotFoundError:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
-
+    await update_message(sender_id=current_user_id, message_id=message_id, message_data=content)
     return {"detail": "Message successfully updated"}
 
 
@@ -140,12 +96,4 @@ async def delete_messages_endpoint(
         current_user_id: Annotated[int, Depends(verify_token)],
         message_id: list[int] = Query()
 ):
-    try:
-        await delete_messages(current_user_id=current_user_id, messages_ids=message_id)
-    except MessageNotFound:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Message not found")
-    except AccessDeniedError:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail="You does not have permission to perform this operation")
-    except ConversationNotFoundError:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
+    await delete_messages(current_user_id=current_user_id, messages_ids=message_id)

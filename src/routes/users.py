@@ -56,7 +56,6 @@ async def get_current_user_endpoint(
         current_user_id: Annotated[int, Depends(verify_token)]
 ):
     profile_data = await get_private_user(current_user_id)
-
     return profile_data
 
 
@@ -65,7 +64,6 @@ async def get_users_endpoint(
         users_ids: GetUsers = Query()
 ):
     users_objects = await get_public_users(request_obj=users_ids)
-
     return users_objects
 
 
@@ -74,7 +72,6 @@ async def search_users_endpoint(
         search_query: str = Query(min_length=3, max_length=128)
 ):
     users_objects = await process_search_users(search_query=search_query)
-
     return users_objects
 
 
@@ -82,11 +79,7 @@ async def search_users_endpoint(
 async def get_user_avatar_endpoint(
         user_id: int
 ):
-    try:
-        filepath = await get_avatar_path(user_id=user_id)
-    except FileNotFound:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
-
+    filepath = await get_avatar_path(user_id=user_id)
     return FileResponse(filepath)
 
 
@@ -94,11 +87,7 @@ async def get_user_avatar_endpoint(
 async def get_users_avatars_endpoint(
         avatars: Avatars = Query()
 ):
-    try:
-        avatars_paths = await get_avatars_paths(avatars.users_ids)
-    except FileNotFound:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
-
+    avatars_paths = await get_avatars_paths(avatars.users_ids)
     zip_obj = FileManager().archive_files(avatars_paths)
     return StreamingResponse(zip_obj, media_type="application/zip")
 
@@ -108,7 +97,6 @@ async def get_current_user_conversations_endpoint(
         current_user_id: Annotated[int, Depends(verify_token)]
 ):
     conversations_objs = await get_conversations(current_user_id=current_user_id)
-
     return conversations_objs
 
 
@@ -116,7 +104,8 @@ async def get_current_user_conversations_endpoint(
 async def get_users_last_online_endpoint(
         users_ids: UserOnline = Query()
 ):
-    return await users_online(user_ids=users_ids)
+    users_last_online = await users_online(user_ids=users_ids)
+    return users_last_online
 
 
 @users_router.put("/me/avatar", status_code=status.HTTP_204_NO_CONTENT)
@@ -124,14 +113,7 @@ async def update_current_user_avatar_endpoint(
         current_user_id: Annotated[int, Depends(verify_token)],
         avatar: UploadFile = File()
 ):
-    try:
-        await update_avatar(user_id=current_user_id, avatar=avatar)
-    except InvalidFileType as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    except FIleToBig as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    except ImageCorrupted as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    await update_avatar(user_id=current_user_id, avatar=avatar)
 
 
 @users_router.patch("/me", status_code=status.HTTP_204_NO_CONTENT)
@@ -146,11 +128,7 @@ async def update_current_user_endpoint(
 async def delete_current_user_avatar_endpoint(
         current_user_id: Annotated[int, Depends(verify_token)]
 ):
-    try:
-        filepath = await get_avatar_path(user_id=current_user_id)
-    except FileNotFound:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
-
+    filepath = await get_avatar_path(user_id=current_user_id)
     await delete_avatar(
         user_id=current_user_id,
         avatar_path=filepath
@@ -163,30 +141,15 @@ async def current_user_leave_from_group_endpoint(
         group_id: int,
         delete_messages: bool = False
 ):
-    try:
-        await leave_group(
-            current_user_id=current_user_id,
-            group_id=group_id,
-            delete_messages=delete_messages
-        )
-    except UserNotFoundError:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    except ConversationNotFoundError:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Chat not found")
-    except IsNotAGroupError:
-        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Conversation not a group")
-    except AccessDeniedError:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail="You does not have permission to perform this operation")
+    await leave_group(
+        current_user_id=current_user_id,
+        group_id=group_id,
+        delete_messages=delete_messages
+    )
 
 
 @users_router.delete("/me", status_code=status.HTTP_202_ACCEPTED)
 async def delete_current_user_endpoint(
         current_user_id: Annotated[int, Depends(verify_token)]
 ):
-    try:
-        await delete_account(user_id=current_user_id)
-    except UserNotFoundError:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-
-
+    await delete_account(user_id=current_user_id)
