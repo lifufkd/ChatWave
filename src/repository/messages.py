@@ -132,6 +132,17 @@ async def fetch_filtered_messages_from_db(conversation_id: int, limit: int, offs
         return result
 
 
+async def search_messages_in_db(conversation_id: int, search_query: str) -> list[Messages]:
+    async with session() as cursor:
+        query = (
+            select(Messages)
+            .filter_by(conversation_id=conversation_id)
+            .filter(Messages.content.icontains(search_query))
+        )
+        result = await cursor.execute(query)
+        return result.scalars().all()
+
+
 async def delete_conversation_messages_from_db(conversation_id: int) -> None:
     async with session() as cursor:
         query = (
