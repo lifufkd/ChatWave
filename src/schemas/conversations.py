@@ -5,7 +5,7 @@ from typing import Annotated, Optional
 from utilities import ValidateModelNotEmpty, request_limit, ConversationTypes
 
 
-class UserIds(BaseModel):
+class ConversationsIds(BaseModel):
     conversations_ids: list[int]
 
     @field_validator('conversations_ids', mode='after')
@@ -28,12 +28,7 @@ class EditConversationExtended(EditConversation):
     avatar_type: Annotated[Optional[str], Field(None)]
 
 
-class GroupsAvatars(UserIds):
-    pass
-
-
 class AddMembersToConversation(BaseModel):
-    group_id: int
     users_ids: list[int]
 
     @field_validator('users_ids', mode='after')
@@ -43,7 +38,6 @@ class AddMembersToConversation(BaseModel):
 
 class GetConversations(BaseModel):
     id: int
-    creator_id: int
     type: ConversationTypes
     name: Annotated[Optional[str], Field(min_length=1, max_length=64)]
     description: Optional[str]
