@@ -7,12 +7,11 @@ from schemas import (
     PrivateUser,
     UpdateUser,
     PublicUser,
-    SearchUser,
     Avatars,
     UserOnline,
     UserOnlineExtended,
     GetUsers,
-    GetConversations, GetConversationsExtended
+    GetConversationsExtended
 )
 from dependencies import verify_token, update_user_last_online, verify_user_is_existed
 from services import (
@@ -24,9 +23,21 @@ from services import (
     users_online,
     get_avatar_path,
     delete_avatar,
-    process_search_users, get_conversations
+    process_search_users,
+    get_conversations,
+    delete_account, leave_group
 )
-from utilities import InvalidFileType, FIleToBig, ImageCorrupted, FileNotFound, FileManager
+from utilities import (
+    InvalidFileType,
+    FIleToBig,
+    ImageCorrupted,
+    FileNotFound,
+    FileManager,
+    UserNotFoundError,
+    ConversationNotFoundError,
+    IsNotAGroupError,
+    AccessDeniedError
+)
 
 users_router = APIRouter(
     tags=["Users"],
@@ -41,19 +52,59 @@ anonymous_users_router = APIRouter(
 
 
 @users_router.get("/me", status_code=status.HTTP_200_OK, response_model=PrivateUser)
-async def get_my_profile_endpoint(current_user_id: Annotated[int, Depends(verify_token)]):
+async def get_current_user_endpoint(
+        current_user_id: Annotated[int, Depends(verify_token)]
+):
     profile_data = await get_private_user(current_user_id)
 
     return profile_data
 
 
-@users_router.patch("/me", status_code=status.HTTP_204_NO_CONTENT)
-async def update_my_profile_endpoint(current_user_id: Annotated[int, Depends(verify_token)], profile_data: UpdateUser):
-    await update_profile(user_id=current_user_id, profile=profile_data)
+@anonymous_users_router.get("", status_code=status.HTTP_200_OK, response_model=list[PublicUser])
+async def get_users_endpoint(
+        users_ids: GetUsers = Query()
+):
+    users_objects = await get_public_users(request_obj=users_ids)
+
+    return users_objects
+
+
+@anonymous_users_router.get("/search", status_code=status.HTTP_200_OK, response_model=list[PublicUser])
+async def search_users_endpoint(
+        search_query: str = Query(min_length=3, max_length=128)
+):
+    users_objects = await process_search_users(search_query=search_query)
+
+    return users_objects
+
+
+@anonymous_users_router.get("/{user_id}/avatar", status_code=status.HTTP_200_OK)
+async def get_user_avatar_endpoint(
+        user_id: int
+):
+    try:
+        filepath = await get_avatar_path(user_id=user_id)
+    except FileNotFound:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
+
+    return FileResponse(filepath)
+
+
+@anonymous_users_router.get("/avatars", status_code=status.HTTP_200_OK)
+async def get_users_avatars_endpoint(
+        avatars: Avatars = Query()
+):
+    try:
+        avatars_paths = await get_avatars_paths(avatars.users_ids)
+    except FileNotFound:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
+
+    zip_obj = FileManager().archive_files(avatars_paths)
+    return StreamingResponse(zip_obj, media_type="application/zip")
 
 
 @users_router.get("/conversations", status_code=status.HTTP_200_OK, response_model=list[GetConversationsExtended])
-async def get_my_conversations_endpoint(
+async def get_current_user_conversations_endpoint(
         current_user_id: Annotated[int, Depends(verify_token)]
 ):
     conversations_objs = await get_conversations(current_user_id=current_user_id)
@@ -61,8 +112,18 @@ async def get_my_conversations_endpoint(
     return conversations_objs
 
 
+@anonymous_users_router.get("/last_online", status_code=status.HTTP_200_OK, response_model=list[UserOnlineExtended])
+async def get_users_last_online_endpoint(
+        users_ids: UserOnline = Query()
+):
+    return await users_online(user_ids=users_ids)
+
+
 @users_router.put("/me/avatar", status_code=status.HTTP_204_NO_CONTENT)
-async def update_my_avatar_endpoint(current_user_id: Annotated[int, Depends(verify_token)], avatar: UploadFile = File()):
+async def update_current_user_avatar_endpoint(
+        current_user_id: Annotated[int, Depends(verify_token)],
+        avatar: UploadFile = File()
+):
     try:
         await update_avatar(user_id=current_user_id, avatar=avatar)
     except InvalidFileType as e:
@@ -73,29 +134,18 @@ async def update_my_avatar_endpoint(current_user_id: Annotated[int, Depends(veri
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@anonymous_users_router.get("/{user_id}/avatar", status_code=status.HTTP_200_OK)
-async def get_avatar_endpoint(user_id: int):
-    try:
-        filepath = await get_avatar_path(user_id=user_id)
-    except FileNotFound:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
-
-    return FileResponse(filepath)
-
-
-@anonymous_users_router.get("/avatars", status_code=status.HTTP_200_OK)
-async def get_avatars_endpoint(avatars: Avatars = Query()):
-    try:
-        avatars_paths = await get_avatars_paths(avatars.users_ids)
-    except FileNotFound:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
-
-    zip_obj = FileManager().archive_files(avatars_paths)
-    return StreamingResponse(zip_obj, media_type="application/zip")
+@users_router.patch("/me", status_code=status.HTTP_204_NO_CONTENT)
+async def update_current_user_endpoint(
+        current_user_id: Annotated[int, Depends(verify_token)],
+        profile_data: UpdateUser
+):
+    await update_profile(user_id=current_user_id, profile=profile_data)
 
 
 @users_router.delete("/me/avatar", status_code=status.HTTP_202_ACCEPTED)
-async def delete_my_avatar_endpoint(current_user_id: Annotated[int, Depends(verify_token)]):
+async def delete_current_user_avatar_endpoint(
+        current_user_id: Annotated[int, Depends(verify_token)]
+):
     try:
         filepath = await get_avatar_path(user_id=current_user_id)
     except FileNotFound:
@@ -107,21 +157,36 @@ async def delete_my_avatar_endpoint(current_user_id: Annotated[int, Depends(veri
     )
 
 
-@anonymous_users_router.get("/profiles", status_code=status.HTTP_200_OK, response_model=list[PublicUser])
-async def get_profiles_endpoint(users_ids: GetUsers = Query()):
-    users_objects = await get_public_users(request_obj=users_ids)
+@users_router.delete("/conversations/{group_id}", status_code=status.HTTP_202_ACCEPTED)
+async def current_user_leave_from_group_endpoint(
+        current_user_id: Annotated[int, Depends(verify_token)],
+        group_id: int,
+        delete_messages: bool = False
+):
+    try:
+        await leave_group(
+            current_user_id=current_user_id,
+            group_id=group_id,
+            delete_messages=delete_messages
+        )
+    except UserNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    except ConversationNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Chat not found")
+    except IsNotAGroupError:
+        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Conversation not a group")
+    except AccessDeniedError:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="You does not have permission to perform this operation")
 
-    return users_objects
 
+@users_router.delete("/me", status_code=status.HTTP_202_ACCEPTED)
+async def delete_current_user_endpoint(
+        current_user_id: Annotated[int, Depends(verify_token)]
+):
+    try:
+        await delete_account(user_id=current_user_id)
+    except UserNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
-@anonymous_users_router.post("/search", status_code=status.HTTP_200_OK, response_model=list[PublicUser])
-async def search_profiles_endpoint(search_data: SearchUser):
-    users_objects = await process_search_users(request_obj=search_data)
-
-    return users_objects
-
-
-@anonymous_users_router.get("/last_online", status_code=status.HTTP_200_OK, response_model=list[UserOnlineExtended])
-async def get_users_last_online_endpoint(users_ids: UserOnline = Query()):
-    return await users_online(user_ids=users_ids)
 

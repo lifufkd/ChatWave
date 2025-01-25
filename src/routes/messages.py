@@ -7,40 +7,27 @@ from utilities import (
     ConversationNotFoundError,
     AccessDeniedError,
     InvalidFileType,
-    FIleToBig, ImageCorrupted, MessageNotFound, FileNotFound, FileManager, IsNotAChatError,
+    FIleToBig,
+    ImageCorrupted,
+    MessageNotFound,
+    FileNotFound,
+    FileManager
 )
-from services import create_text_message, create_media_message, update_message, get_messages, get_message_media_path, \
-    get_messages_media_paths, delete_messages, delete_all_messages
-from schemas import CreateTextMessage, CreateMediaMessage, UpdateMessage, GetMessages, MessagesIds
+from services import (
+    create_text_message,
+    create_media_message,
+    update_message,
+    get_message_media_path,
+    get_messages_media_paths,
+    delete_messages
+)
+from schemas import CreateTextMessage, CreateMediaMessage, UpdateMessage, MessagesIds
 
 messages_router = APIRouter(
     prefix="/messages",
     tags=["Messages"],
     dependencies=[Depends(update_user_last_online), Depends(verify_user_is_existed)]
 )
-
-
-@messages_router.get("", status_code=status.HTTP_200_OK)
-async def get_messages_media_endpoint(
-        current_user_id: Annotated[int, Depends(verify_token)],
-        messages_ids: MessagesIds = Query()
-):
-    try:
-        messages_media_paths = await get_messages_media_paths(
-            sender_id=current_user_id,
-            messages_ids=messages_ids.messages_ids
-        )
-        zip_obj = FileManager().archive_files(messages_media_paths)
-        return StreamingResponse(zip_obj, media_type="application/zip")
-    except FileNotFound:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
-    except MessageNotFound:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Message not found")
-    except AccessDeniedError:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail="You does not have permission to perform this operation")
-    except ConversationNotFoundError:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
 
 
 @messages_router.get("/{message_id}/media", status_code=status.HTTP_200_OK)
@@ -54,6 +41,29 @@ async def get_message_media_endpoint(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
 
     return FileResponse(filepath)
+
+
+@messages_router.get("/media", status_code=status.HTTP_200_OK)
+async def get_messages_medias_endpoint(
+        current_user_id: Annotated[int, Depends(verify_token)],
+        message_id: MessagesIds = Query()
+):
+    try:
+        messages_media_paths = await get_messages_media_paths(
+            sender_id=current_user_id,
+            messages_ids=message_id.messages_ids
+        )
+        zip_obj = FileManager().archive_files(messages_media_paths)
+        return StreamingResponse(zip_obj, media_type="application/zip")
+    except FileNotFound:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
+    except MessageNotFound:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Message not found")
+    except AccessDeniedError:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="You does not have permission to perform this operation")
+    except ConversationNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
 
 
 @messages_router.post("/{conversation_id}/text", status_code=status.HTTP_201_CREATED)
@@ -125,35 +135,13 @@ async def update_message_endpoint(
     return {"detail": "Message successfully updated"}
 
 
-@messages_router.get("/{conversation_id}", status_code=status.HTTP_200_OK, response_model=list[GetMessages])
-async def get_messages_endpoint(
-        current_user_id: Annotated[int, Depends(verify_token)],
-        conversation_id: int,
-        limit: int = Query(10, ge=1, le=1000),
-        offset: int = 0
-):
-    try:
-        messages_objs = await get_messages(
-            sender_id=current_user_id,
-            conversation_id=conversation_id,
-            limit=limit,
-            offset=offset
-        )
-        return messages_objs
-    except AccessDeniedError:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail="You does not have permission to perform this operation")
-    except ConversationNotFoundError:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
-
-
 @messages_router.delete("", status_code=status.HTTP_202_ACCEPTED)
 async def delete_messages_endpoint(
         current_user_id: Annotated[int, Depends(verify_token)],
-        messages_ids: list[int] = Query()
+        message_id: list[int] = Query()
 ):
     try:
-        await delete_messages(current_user_id=current_user_id, messages_ids=messages_ids)
+        await delete_messages(current_user_id=current_user_id, messages_ids=message_id)
     except MessageNotFound:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Message not found")
     except AccessDeniedError:
@@ -161,20 +149,3 @@ async def delete_messages_endpoint(
                             detail="You does not have permission to perform this operation")
     except ConversationNotFoundError:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Conversation not found")
-
-
-@messages_router.delete("/{chat_id}", status_code=status.HTTP_202_ACCEPTED)
-async def delete_all_messages_from_chat(
-        current_user_id: Annotated[int, Depends(verify_token)],
-        chat_id: int
-):
-    try:
-        await delete_all_messages(current_user_id=current_user_id, chat_id=chat_id)
-    except ConversationNotFoundError:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Chat not found")
-    except IsNotAChatError:
-        raise HTTPException(status_code=status.HTTP_406_NOT_ACCEPTABLE, detail="Is not a chat")
-    except AccessDeniedError:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail="You does not have permission to perform this operation")
-
