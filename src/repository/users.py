@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import select, insert, update, text
+from sqlalchemy import select, insert, update, text, delete
 from sqlalchemy.orm import selectinload
 
 from models import Users, Conversations
@@ -139,3 +139,13 @@ async def get_users_online_from_db(users: UserOnline) -> list[tuple[int, datetim
         raw_data = raw_data.all()
 
         return raw_data
+
+
+async def delete_user_from_db(user_id: int):
+    async with session() as cursor:
+        query = (
+            delete(Users)
+            .filter_by(id=user_id)
+        )
+        await cursor.execute(query)
+        await cursor.commit()
