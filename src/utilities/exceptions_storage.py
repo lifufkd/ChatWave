@@ -1,12 +1,7 @@
-from fastapi import status
-from fastapi.exceptions import HTTPException
-
-
-credential_exception = HTTPException(
-    status_code=status.HTTP_401_UNAUTHORIZED,
-    detail="Could not validate credentials",
-    headers={"WWW-Authenticate": "Bearer"}
-)
+class InvalidCredentials(Exception):
+    def __init__(self):
+        detail = "Could not validate credentials"
+        super().__init__(detail)
 
 
 class UserNotFoundError(Exception):
