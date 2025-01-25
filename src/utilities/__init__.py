@@ -19,7 +19,7 @@ from .exceptions_storage import (
     InvalidPasswordError,
     UserNotFoundError,
     UserAlreadyExists,
-    credential_exception,
+    InvalidCredentials,
     InvalidFileType,
     FIleToBig,
     ImageCorrupted,
