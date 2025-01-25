@@ -1,4 +1,5 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, status
+from fastapi.responses import JSONResponse
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from contextlib import asynccontextmanager
@@ -12,7 +13,25 @@ from routes import (
     anonymous_users_router,
     messages_router
 )
-from utilities import FileManager
+from utilities import (
+    FileManager,
+    UserNotFoundError,
+    ConversationNotFoundError,
+    AccessDeniedError,
+    IsNotAGroupError,
+    IsNotAChatError,
+    InvalidPasswordError,
+    InvalidCredentials,
+    UserAlreadyExists,
+    InvalidFileType,
+    FIleToBig,
+    ImageCorrupted,
+    ChatAlreadyExists,
+    SameUsersIds,
+    FileNotFound,
+    UserAlreadyInConversation,
+    MessageNotFound
+)
 
 
 @asynccontextmanager
@@ -28,6 +47,93 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan
 )
+
+
+@app.exception_handler(Exception)
+async def exception_handler(request, exc: Exception) -> JSONResponse:
+    match exc:
+        case UserNotFoundError():
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={"detail": str(exc)}
+            )
+        case ConversationNotFoundError():
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={"detail": str(exc)}
+            )
+        case AccessDeniedError():
+            return JSONResponse(
+                status_code=status.HTTP_403_FORBIDDEN,
+                content={"detail": str(exc)}
+            )
+        case IsNotAGroupError():
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={"detail": str(exc)}
+            )
+        case IsNotAChatError():
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={"detail": str(exc)}
+            )
+        case InvalidPasswordError():
+            return JSONResponse(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                content={"detail": str(exc)}
+            )
+        case InvalidCredentials():
+            return JSONResponse(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                content={"detail": str(exc)},
+                headers={"WWW-Authenticate": "Bearer"}
+            )
+        case UserAlreadyExists():
+            return JSONResponse(
+                status_code=status.HTTP_409_CONFLICT,
+                content={"detail": str(exc)},
+            )
+        case InvalidFileType():
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={"detail": str(exc)},
+            )
+        case FIleToBig():
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={"detail": str(exc)},
+            )
+        case ImageCorrupted():
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={"detail": str(exc)},
+            )
+        case ChatAlreadyExists():
+            return JSONResponse(
+                status_code=status.HTTP_409_CONFLICT,
+                content={"detail": str(exc)}
+            )
+        case SameUsersIds():
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={"detail": str(exc)}
+            )
+        case FileNotFound():
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={"detail": str(exc)}
+            )
+        case UserAlreadyInConversation():
+            return JSONResponse(
+                status_code=status.HTTP_409_CONFLICT,
+                content={"detail": str(exc)}
+            )
+        case MessageNotFound():
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={"detail": str(exc)}
+            )
+
 
 app.include_router(authorization_router)
 
