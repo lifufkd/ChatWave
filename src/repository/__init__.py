@@ -9,7 +9,8 @@ from .users import (
     get_users_online_from_db,
     update_user_last_online_in_db,
     check_user_is_existed,
-    delete_user_avatar_in_db
+    delete_user_avatar_in_db,
+    delete_user_from_db
 )
 from .conversations import (
     add_conversation_in_db,
@@ -24,7 +25,11 @@ from .conversations import (
 from .conversations_members import (
     add_conversation_members_in_db,
     get_conversation_member_role_from_db,
-    delete_conversation_members_in_db
+    delete_conversation_members_in_db,
+    get_conversation_members_quantity_in_db,
+    get_conversation_members_in_db,
+    get_conversation_admin_members_from_db,
+    update_conversation_member_in_db
 )
 from .messages import (
     insert_text_message_to_db,
@@ -38,6 +43,7 @@ from .messages import (
     fetch_filtered_messages_from_db,
     delete_conversation_messages_from_db,
     delete_messages_from_db,
-    delete_sender_messages
+    delete_sender_messages,
+    search_messages_in_db
 )
 

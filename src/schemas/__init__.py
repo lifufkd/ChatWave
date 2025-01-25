@@ -16,11 +16,11 @@ from .conversations import (
     CreateGroup,
     EditConversation,
     EditConversationExtended,
-    GroupsAvatars,
     AddMembersToConversation,
     GetConversations,
     GetConversationsExtended,
-    DeleteGroupMembers
+    DeleteGroupMembers,
+    ConversationsIds
 )
 from .messages import (
     CreateTextMessage,

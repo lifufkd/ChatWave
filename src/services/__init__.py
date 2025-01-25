@@ -9,7 +9,8 @@ from .users import (
     get_avatar_path,
     delete_avatar,
     process_search_users,
-    get_conversations
+    get_conversations,
+    delete_account
 )
 from .conversations import (
     add_chat_conversation,
@@ -21,7 +22,9 @@ from .conversations import (
     delete_group_avatar,
     add_members_to_conversation,
     delete_members_from_group,
-    delete_conversation
+    delete_conversation,
+    leave_group,
+    search_messages
 )
 from .messages import (
     create_text_message,
