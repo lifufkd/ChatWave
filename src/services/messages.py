@@ -1,14 +1,21 @@
 from pathlib import Path
-
-from dependencies import validate_user_in_conversation, validate_user_is_message_owner, \
-    validate_user_have_access_to_message, validate_user_have_access_to_messages, validate_user_in_chat, \
+from dependencies import (
+    validate_user_in_conversation,
+    validate_user_is_message_owner,
+    validate_user_have_access_to_message,
+    validate_user_have_access_to_messages,
+    validate_user_in_chat,
     validate_user_can_manage_messages
+)
 from repository import (
     insert_text_message_to_db,
     insert_empty_message,
     insert_media_message_to_db,
     update_message_in_db,
-    fetch_filtered_messages_from_db, get_message_from_db, get_messages_from_db, delete_conversation_messages_from_db,
+    fetch_filtered_messages_from_db,
+    get_message_from_db,
+    get_messages_from_db,
+    delete_conversation_messages_from_db,
     delete_messages_from_db
 )
 from schemas import (
@@ -19,8 +26,14 @@ from schemas import (
     UpdateMessage,
     GetMessages
 )
-from utilities import MessagesStatus, MessagesTypes, FileManager, generic_settings, many_sqlalchemy_to_pydantic, \
+from utilities import (
+    MessagesStatus,
+    MessagesTypes,
+    FileManager,
+    generic_settings,
+    many_sqlalchemy_to_pydantic,
     FileNotFound
+)
 
 
 async def create_text_message(sender_id: int, conversation_id: int, content: CreateTextMessage):

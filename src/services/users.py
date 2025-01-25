@@ -6,7 +6,7 @@ from repository import (
     get_users_online_from_db,
     delete_user_avatar_in_db,
     get_user_from_db,
-    get_users_from_db
+    get_users_from_db, delete_conversation_in_db, delete_user_from_db
 )
 from schemas import (
     PrivateUser,
@@ -18,6 +18,7 @@ from schemas import (
     UserOnline,
     GetUsers, GetConversations, GetConversationsExtended
 )
+from .conversations import leave_group
 from utilities import (
     sqlalchemy_to_pydantic,
     many_sqlalchemy_to_pydantic,
@@ -25,7 +26,7 @@ from utilities import (
     generic_settings,
     Hash,
     FileNotFound,
-    MessagesTypes
+    MessagesTypes, ConversationTypes
 )
 
 
@@ -176,3 +177,14 @@ async def users_online(user_ids: UserOnline) -> list[UserOnlineExtended]:
         users_objs.append(UserOnlineExtended.model_validate(transformed_data))
 
     return users_objs
+
+
+async def delete_account(user_id: int) -> None:
+    user_obj = await get_user_from_db(user_id=user_id)
+    for conversation_obj in user_obj.conversations:
+        if conversation_obj.type == ConversationTypes.PRIVATE:
+            await delete_conversation_in_db(conversation_id=conversation_obj.id)
+        else:
+            await leave_group(current_user_id=user_id, group_id=conversation_obj.id)
+
+    await delete_user_from_db(user_id=user_id)

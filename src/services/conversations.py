@@ -1,9 +1,8 @@
-from io import BytesIO
 from pathlib import Path
 from fastapi import UploadFile
 
 from dependencies import validate_user_can_manage_group, validate_user_in_conversation, \
-    validate_user_can_manage_conversation
+    validate_user_can_manage_conversation, validate_user_in_group
 from models import Users, Conversations
 from repository import (
     check_user_is_existed,
@@ -17,7 +16,8 @@ from repository import (
     get_conversation_type,
     delete_conversation_avatar_from_db,
     get_conversation_member_role_from_db, delete_conversation_members_in_db, delete_conversation_in_db,
-    delete_sender_messages
+    delete_sender_messages, get_conversation_members_quantity_in_db, get_conversation_members_in_db,
+    get_conversation_admin_members_from_db, update_conversation_member_in_db, search_messages_in_db
 )
 from utilities import (
     UserNotFoundError,
@@ -32,10 +32,11 @@ from utilities import (
     generic_settings,
     FileNotFound,
     UserAlreadyInConversation,
-    MessagesTypes
+    MessagesTypes,
+    many_sqlalchemy_to_pydantic
 )
-from schemas import CreateGroup, EditConversation, EditConversationExtended, GroupsAvatars, AddMembersToConversation, \
-    DeleteGroupMembers
+from schemas import CreateGroup, EditConversation, EditConversationExtended, AddMembersToConversation, \
+    DeleteGroupMembers, GetMessages, ConversationsIds
 
 
 async def get_conversations_ids(user_obj: Users) -> list[int]:
@@ -180,7 +181,7 @@ async def get_group_avatar_path(current_user_id: int, group_id: int) -> Path:
     return filepath
 
 
-async def get_groups_avatars_paths(current_user_id: int, request_obj: GroupsAvatars) -> list[Path]:
+async def get_groups_avatars_paths(current_user_id: int, request_obj: ConversationsIds) -> list[Path]:
     for group_id in request_obj.conversations_ids:
         if not (await check_is_conversation_existed(conversation_id=group_id)):
             raise ConversationNotFoundError()
@@ -242,6 +243,51 @@ async def delete_conversation(current_user_id: int, conversation_id: int) -> Non
     await validate_user_can_manage_conversation(user_id=current_user_id, conversation_id=conversation_id)
 
     await delete_conversation_in_db(conversation_id=conversation_id)
+
+
+async def search_messages(current_user_id: int, conversations_id: int, search_query: str) -> list[GetMessages]:
+    await validate_user_in_conversation(user_id=current_user_id, conversation_id=conversations_id)
+
+    raw_messages = await search_messages_in_db(conversation_id=conversations_id, search_query=search_query)
+    messages_objs = await many_sqlalchemy_to_pydantic(
+        sqlalchemy_models=raw_messages,
+        pydantic_model=GetMessages
+    )
+
+    return messages_objs
+
+
+async def leave_group(current_user_id: int, group_id: int, delete_messages: bool = False) -> None:
+
+    async def get_new_admin_user_id() -> int:
+        group_users_ordered_by_join_time = await get_conversation_members_in_db(conversation_id=group_id)
+        for member_obj in group_users_ordered_by_join_time:
+            if current_user_id == member_obj.user_id:
+                continue
+            return member_obj.user_id
+
+    await validate_user_in_group(user_id=current_user_id, group_id=group_id)
+
+    group_members_quantity = await get_conversation_members_quantity_in_db(conversation_id=group_id)
+    if group_members_quantity == 1:
+        await delete_conversation_in_db(conversation_id=group_id)
+    else:
+        user_group_role = await get_conversation_member_role_from_db(user_id=current_user_id, conversation_id=group_id)
+        if user_group_role != ConversationMemberRoles.MEMBER:
+
+            admin_users_quantity = len((await get_conversation_admin_members_from_db(conversation_id=group_id)))
+            if admin_users_quantity == 1:
+                new_admin_user_id = await get_new_admin_user_id()
+                await update_conversation_member_in_db(
+                    conversation_id=group_id,
+                    member_id=new_admin_user_id,
+                    role=ConversationMemberRoles.ADMIN
+                )
+
+        await delete_conversation_members_in_db(conversation_id=group_id, members_ids=[current_user_id])
+
+        if delete_messages:
+            await delete_sender_messages(conversation_id=group_id, members_ids=[current_user_id])
 
 
 
