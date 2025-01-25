@@ -10,7 +10,8 @@ class Conversations(OrmBase):
     __tablename__ = 'conversations'
     id: Mapped[primary_key_type]
     creator_id: Mapped[int] = mapped_column(
-        ForeignKey("users.id")
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True
     )
     type: Mapped[ConversationTypes] = mapped_column(index=True)
     name: Mapped[str] = mapped_column(String(64), nullable=True)
