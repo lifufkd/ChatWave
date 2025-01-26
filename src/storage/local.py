@@ -11,7 +11,7 @@ class FileManager(BaseStorage):
         pass
 
     @staticmethod
-    def create_folders_structure(self):
+    def create_folders_structure():
         users_avatar_folder = generic_settings.MEDIA_FOLDER / "users" / "avatars"
         groups_avatar_folder = generic_settings.MEDIA_FOLDER / "groups" / "avatars"
         media_messages_folder = generic_settings.MEDIA_FOLDER / "messages" / "media"
