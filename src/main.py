@@ -4,7 +4,7 @@ from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from contextlib import asynccontextmanager
 
-from database import redis_client
+from dependencies import redis_client
 from repository import create_tables
 from routes import (
     authorization_router,
@@ -13,8 +13,8 @@ from routes import (
     anonymous_users_router,
     messages_router
 )
+from storage import FileManager
 from utilities import (
-    FileManager,
     UserNotFoundError,
     ConversationNotFoundError,
     AccessDeniedError,
@@ -36,7 +36,7 @@ from utilities import (
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    FileManager().init_folders()
+    FileManager.create_folders_structure()
     FastAPICache.init(RedisBackend(redis_client), prefix="chatwave-cache")
     await create_tables()
     yield
