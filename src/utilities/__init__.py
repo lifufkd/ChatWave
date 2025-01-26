@@ -34,5 +34,5 @@ from .exceptions_storage import (
     MessageNotFound
 )
 from .file_manager import FileManager
-from .validators import validate_password, validate_nicknames, request_limit, ValidateModelNotEmpty
+from .models_validators import validate_password, validate_nicknames, request_limit, ValidateModelNotEmpty
 
