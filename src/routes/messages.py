@@ -1,18 +1,10 @@
-from fastapi import APIRouter, Depends, UploadFile, File, HTTPException, status, Form, Query
+from fastapi import APIRouter, Depends, UploadFile, File, status, Form, Query
 from fastapi.responses import FileResponse, StreamingResponse
 from typing import Annotated, Optional
 
-from dependencies import update_user_last_online, verify_token, verify_user_is_existed
-from utilities import (
-    ConversationNotFoundError,
-    AccessDeniedError,
-    InvalidFileType,
-    FIleToBig,
-    ImageCorrupted,
-    MessageNotFound,
-    FileNotFound,
-    FileManager
-)
+from dependencies import verify_token
+from validators import update_user_last_online, verify_user_is_existed
+from storage import FileManager
 from services import (
     create_text_message,
     create_media_message,
@@ -48,7 +40,7 @@ async def get_messages_medias_endpoint(
         sender_id=current_user_id,
         messages_ids=message_id.messages_ids
     )
-    zip_obj = FileManager().archive_files(messages_media_paths)
+    zip_obj = await FileManager().archive_files(messages_media_paths)
     return StreamingResponse(zip_obj, media_type="application/zip")
 
 

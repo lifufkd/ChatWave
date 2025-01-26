@@ -1,7 +1,7 @@
 from sqlalchemy import select, update, delete
 from sqlalchemy.orm import selectinload
 
-from models import Conversations, Users
+from models import Conversations
 from database import session
 from schemas import EditConversationExtended
 from utilities import ConversationTypes

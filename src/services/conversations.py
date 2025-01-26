@@ -1,8 +1,12 @@
 from pathlib import Path
 from fastapi import UploadFile
 
-from dependencies import validate_user_can_manage_group, validate_user_in_conversation, \
-    validate_user_can_manage_conversation, validate_user_in_group
+from validators import (
+    validate_user_can_manage_group,
+    validate_user_in_conversation,
+    validate_user_can_manage_conversation,
+    validate_user_in_group
+)
 from models import Users, Conversations
 from repository import (
     check_user_is_existed,
@@ -15,10 +19,17 @@ from repository import (
     check_is_conversation_existed,
     get_conversation_type,
     delete_conversation_avatar_from_db,
-    get_conversation_member_role_from_db, delete_conversation_members_in_db, delete_conversation_in_db,
-    delete_sender_messages, get_conversation_members_quantity_in_db, get_conversation_members_in_db,
-    get_conversation_admin_members_from_db, update_conversation_member_in_db, search_messages_in_db
+    get_conversation_member_role_from_db,
+    delete_conversation_members_in_db,
+    delete_conversation_in_db,
+    delete_sender_messages,
+    get_conversation_members_quantity_in_db,
+    get_conversation_members_in_db,
+    get_conversation_admin_members_from_db,
+    update_conversation_member_in_db,
+    search_messages_in_db
 )
+from storage import FileManager
 from utilities import (
     UserNotFoundError,
     ChatAlreadyExists,
@@ -28,7 +39,6 @@ from utilities import (
     ConversationMemberRoles,
     ConversationNotFoundError,
     AccessDeniedError,
-    FileManager,
     generic_settings,
     FileNotFound,
     UserAlreadyInConversation,
@@ -106,7 +116,6 @@ async def add_group_conversation(current_user_id: int, group_data: CreateGroup):
 
 async def update_conversation(current_user_id: int, group_id: int, group_obj: EditConversation):
     await validate_group(current_user_id, group_id)
-    user_role_in_group = await get_conversation_member_role_from_db(user_id=current_user_id, conversation_id=group_id)
     if (await get_conversation_member_role_from_db(user_id=current_user_id,
                                                    conversation_id=group_id)) == ConversationMemberRoles.MEMBER:
         raise AccessDeniedError()
@@ -120,7 +129,10 @@ async def update_conversation(current_user_id: int, group_id: int, group_obj: Ed
 
 async def add_members_to_conversation(current_user_id: int, request_data: AddMembersToConversation):
     await validate_group(current_user_id, request_data.group_id)
-    if (await get_conversation_member_role_from_db(user_id=current_user_id, conversation_id=request_data.group_id)) == ConversationMemberRoles.MEMBER:
+    if ((await get_conversation_member_role_from_db(
+            user_id=current_user_id,
+            conversation_id=request_data.group_id))
+            == ConversationMemberRoles.MEMBER):
         raise AccessDeniedError()
 
     users_objs = list()
@@ -145,13 +157,13 @@ async def add_members_to_conversation(current_user_id: int, request_data: AddMem
 async def update_group_avatar(current_user_id: int, group_id: int, avatar: UploadFile) -> None:
 
     async def save_avatar_to_file():
-        FileManager().validate_file(
+        await FileManager().validate_file(
             file_content=await avatar.read(),
             file_type=avatar.content_type,
             file_type_filter=MessagesTypes.IMAGE
         )
         avatar_save_path = generic_settings.MEDIA_FOLDER / "groups" / "avatars" / avatar_name
-        FileManager.write_file(path=avatar_save_path, content=await avatar.read())
+        await FileManager().write_file(file_path=avatar_save_path, file_data=await avatar.read())
 
     await validate_group(current_user_id, group_id)
     if (await get_conversation_member_role_from_db(user_id=current_user_id,
@@ -175,7 +187,7 @@ async def get_group_avatar_path(current_user_id: int, group_id: int) -> Path:
 
     group_obj = await get_conversation_from_db(conversation_id=group_id)
     filepath = generic_settings.MEDIA_FOLDER / "groups" / "avatars" / f"{group_obj.avatar_name}"
-    if not FileManager.file_exists(path=filepath):
+    if not await FileManager().file_exists(file_path=filepath):
         raise FileNotFound()
 
     return filepath
@@ -215,7 +227,7 @@ async def delete_group_avatar(current_user_id: int, group_id: int,  avatar_path:
                                                    conversation_id=group_id)) == ConversationMemberRoles.MEMBER:
         raise AccessDeniedError()
 
-    FileManager.delete_file(path=avatar_path)
+    await FileManager().delete_file(file_path=avatar_path)
     await delete_conversation_avatar_from_db(conversation_id=group_id)
 
 
@@ -288,6 +300,3 @@ async def leave_group(current_user_id: int, group_id: int, delete_messages: bool
 
         if delete_messages:
             await delete_sender_messages(conversation_id=group_id, members_ids=[current_user_id])
-
-
-

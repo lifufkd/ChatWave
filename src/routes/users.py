@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status, HTTPException, UploadFile, File, Query
+from fastapi import APIRouter, Depends, status, UploadFile, File, Query
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi_cache.decorator import cache
 from typing import Annotated
@@ -13,7 +13,9 @@ from schemas import (
     GetUsers,
     GetConversationsExtended
 )
-from dependencies import verify_token, update_user_last_online, verify_user_is_existed
+from dependencies import verify_token
+from storage import FileManager
+from validators import update_user_last_online, verify_user_is_existed
 from services import (
     get_private_user,
     update_profile,
@@ -26,17 +28,6 @@ from services import (
     process_search_users,
     get_conversations,
     delete_account, leave_group
-)
-from utilities import (
-    InvalidFileType,
-    FIleToBig,
-    ImageCorrupted,
-    FileNotFound,
-    FileManager,
-    UserNotFoundError,
-    ConversationNotFoundError,
-    IsNotAGroupError,
-    AccessDeniedError
 )
 
 users_router = APIRouter(
@@ -88,7 +79,7 @@ async def get_users_avatars_endpoint(
         avatars: Avatars = Query()
 ):
     avatars_paths = await get_avatars_paths(avatars.users_ids)
-    zip_obj = FileManager().archive_files(avatars_paths)
+    zip_obj = await FileManager().archive_files(avatars_paths)
     return StreamingResponse(zip_obj, media_type="application/zip")
 
 

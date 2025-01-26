@@ -19,10 +19,10 @@ from schemas import (
     GetUsers, GetConversations, GetConversationsExtended
 )
 from .conversations import leave_group
+from storage import FileManager
 from utilities import (
     sqlalchemy_to_pydantic,
     many_sqlalchemy_to_pydantic,
-    FileManager,
     generic_settings,
     Hash,
     FileNotFound,
@@ -113,13 +113,13 @@ async def update_profile(user_id: int, profile: UpdateUser) -> None:
 async def update_avatar(user_id: int, avatar: UploadFile) -> None:
 
     async def save_avatar_to_file():
-        FileManager().validate_file(
+        await FileManager().validate_file(
             file_content=await avatar.read(),
             file_type=avatar.content_type,
             file_type_filter=MessagesTypes.IMAGE
         )
         avatar_save_path = generic_settings.MEDIA_FOLDER / "avatars" / avatar_name
-        FileManager.write_file(path=avatar_save_path, content=await avatar.read())
+        await FileManager().write_file(file_path=avatar_save_path, file_data=await avatar.read())
 
     avatar_name = f"{user_id}.{avatar.filename.split('.')[-1]}"
     await save_avatar_to_file()
@@ -135,7 +135,7 @@ async def update_avatar(user_id: int, avatar: UploadFile) -> None:
 async def get_avatar_path(user_id: int) -> Path:
     user_obj = await get_private_user(user_id=user_id)
     filepath = generic_settings.MEDIA_FOLDER / "avatars" / f"{user_obj.avatar_name}"
-    if not FileManager.file_exists(path=filepath):
+    if not await FileManager().file_exists(file_path=filepath):
         raise FileNotFound()
 
     return filepath
@@ -162,7 +162,7 @@ async def get_avatars_paths(users_ids: list[int]) -> list[Path]:
 
 
 async def delete_avatar(user_id: int, avatar_path: Path) -> None:
-    FileManager.delete_file(path=avatar_path)
+    await FileManager().delete_file(file_path=avatar_path)
     await delete_user_avatar_in_db(user_id=user_id)
 
 

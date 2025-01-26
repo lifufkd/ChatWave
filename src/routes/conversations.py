@@ -1,7 +1,9 @@
-from fastapi import APIRouter, Depends, status, HTTPException, UploadFile, File, Query, Body
+from fastapi import APIRouter, Depends, status, UploadFile, File, Query, Body
 from fastapi.responses import StreamingResponse, FileResponse
 from typing import Annotated
-from dependencies import verify_token, update_user_last_online, verify_user_is_existed
+
+from dependencies import verify_token
+from validators import update_user_last_online, verify_user_is_existed
 from services import (
     add_chat_conversation,
     add_group_conversation,
@@ -23,20 +25,7 @@ from schemas import (
     GetMessages,
     ConversationsIds
 )
-from utilities import (
-    UserNotFoundError,
-    ChatAlreadyExists,
-    SameUsersIds,
-    IsNotAGroupError,
-    ConversationNotFoundError,
-    AccessDeniedError,
-    InvalidFileType,
-    FIleToBig,
-    ImageCorrupted,
-    FileNotFound,
-    FileManager,
-    UserAlreadyInConversation, IsNotAChatError
-)
+from storage import FileManager
 
 conversations_router = APIRouter(
     tags=["Conversations"],
@@ -90,7 +79,7 @@ async def get_groups_avatars_endpoint(
         conversation_id: ConversationsIds = Query()
 ):
     avatars_paths = await get_groups_avatars_paths(current_user_id=current_user_id, request_obj=conversation_id)
-    zip_obj = FileManager().archive_files(avatars_paths)
+    zip_obj = await FileManager().archive_files(avatars_paths)
     return StreamingResponse(zip_obj, media_type="application/zip")
 
 

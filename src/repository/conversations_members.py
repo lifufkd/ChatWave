@@ -1,5 +1,5 @@
 from sqlalchemy import select, delete, and_, func, update, asc
-from models import Conversations, Users, ConversationMembers
+from models import Users, ConversationMembers
 from utilities import ConversationMemberRoles
 from database import session
 

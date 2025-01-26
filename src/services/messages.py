@@ -1,5 +1,5 @@
 from pathlib import Path
-from dependencies import (
+from validators import (
     validate_user_in_conversation,
     validate_user_is_message_owner,
     validate_user_have_access_to_message,
@@ -26,10 +26,10 @@ from schemas import (
     UpdateMessage,
     GetMessages
 )
+from storage import FileManager
 from utilities import (
     MessagesStatus,
     MessagesTypes,
-    FileManager,
     generic_settings,
     many_sqlalchemy_to_pydantic,
     FileNotFound
@@ -66,7 +66,7 @@ async def create_media_message(sender_id: int, conversation_id: int, content: Cr
     async def get_message_type():
         file_manager = FileManager()
         _message_type = file_manager.detect_file_type(file_type=content.file_type)
-        file_manager.validate_file(
+        await file_manager.validate_file(
             file_content=content.file,
             file_type=content.file_type,
             file_type_filter=_message_type
@@ -77,7 +77,7 @@ async def create_media_message(sender_id: int, conversation_id: int, content: Cr
 
     async def save_media_to_file():
         avatar_save_path = generic_settings.MEDIA_FOLDER / "messages" / file_name
-        FileManager.write_file(path=avatar_save_path, content=content.file)
+        await FileManager().write_file(file_path=avatar_save_path, file_data=content.file)
 
     await validate_user_in_conversation(user_id=sender_id, conversation_id=conversation_id)
 
@@ -129,7 +129,7 @@ async def get_message_media_path(sender_id: int, message_id: int) -> Path:
 
     message_obj = await get_message_from_db(message_id=message_id)
     filepath = generic_settings.MEDIA_FOLDER / "messages" / f"{message_obj.file_content_name}"
-    if not FileManager.file_exists(path=filepath):
+    if not await FileManager().file_exists(file_path=filepath):
         raise FileNotFound()
 
     return filepath
@@ -169,7 +169,3 @@ async def delete_messages(current_user_id: int, messages_ids: list[int]):
     await validate_user_can_manage_messages(user_id=current_user_id, messages_ids=messages_ids)
 
     await delete_messages_from_db(messages_ids=messages_ids)
-
-
-
-
