@@ -1,14 +1,14 @@
 from .init_db import create_tables, delete_tables
 from .users import (
-    get_user_by_username_from_db,
-    insert_user_in_db,
-    get_user_from_db,
-    get_users_from_db,
+    fetch_user_credentials_by_username,
+    create_user_in_db,
+    fetch_user_from_db,
+    fetch_users_from_db,
     update_user_in_db,
-    get_users_by_nickname_from_db,
-    get_users_online_from_db,
+    search_users_in_db,
+    get_users_last_online_from_db,
     update_user_last_online_in_db,
-    check_user_is_existed,
+    is_user_exists,
     delete_user_avatar_in_db,
     delete_user_from_db
 )

@@ -1,16 +1,13 @@
 from .users import (
-    AuthorizeUser,
     CreateUser,
-    CreateUserExtended,
+    CreateUserDB,
     PublicUser,
     PrivateUser,
     UpdateUser,
-    SearchUser,
-    UpdateUserExtended,
-    Avatars,
+    UpdateUserDB,
+    Avatar,
     UserOnline,
-    UserOnlineExtended,
-    GetUsers,
+    UsersIds
 )
 from .conversations import (
     CreateGroup,

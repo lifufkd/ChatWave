@@ -1,16 +1,16 @@
 from .authentication import get_access_token, add_user
 from .users import (
-    get_private_user,
-    update_profile,
-    get_public_users,
-    update_avatar,
-    get_avatars_paths,
-    users_online,
-    get_avatar_path,
-    delete_avatar,
-    process_search_users,
-    get_conversations,
-    delete_account
+    fetch_private_user,
+    update_user_profile,
+    fetch_public_users,
+    upload_user_avatar,
+    fetch_users_avatars_paths,
+    fetch_users_online_status,
+    fetch_user_avatar_path,
+    remove_user_avatar,
+    search_users_by_nickname,
+    fetch_user_conversations,
+    remove_user_account
 )
 from .conversations import (
     add_chat_conversation,

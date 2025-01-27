@@ -34,6 +34,5 @@ from .exceptions_storage import (
     UserAlreadyInConversation,
     MessageNotFound
 )
-from .file_manager import FileManager
 from .models_validators import validate_password, validate_nicknames, request_limit, ValidateModelNotEmpty
 
