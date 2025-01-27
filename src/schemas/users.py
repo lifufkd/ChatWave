@@ -1,26 +1,15 @@
-from pydantic import BaseModel, Field, model_validator, field_validator
+from pydantic import BaseModel, Field, field_validator
 from typing import Annotated, Optional
 from datetime import datetime, date
-from utilities import validate_password, validate_nicknames, request_limit
+from utilities import validate_password, request_limit
 
 
-class AnswerLimit(BaseModel):
-    limit: Annotated[int, Field(0, ge=1, le=1000)]
-
-
-class UserIds(BaseModel):
+class UsersIds(BaseModel):
     users_ids: list[int]
 
     @field_validator('users_ids', mode='after')
     def set_limits(cls, values):
         return request_limit(values)
-
-
-class AuthorizeUser(BaseModel):
-    id: Annotated[Optional[int], Field(None)]
-    username: str
-    password: str
-    password_hash: Annotated[Optional[str], Field(None)]
 
 
 class CreateUser(BaseModel):
@@ -33,8 +22,10 @@ class CreateUser(BaseModel):
         return validate_password(value)
 
 
-class CreateUserExtended(CreateUser):
-    password_hash: Annotated[Optional[str], Field(None)]
+class CreateUserDB(BaseModel):
+    nickname: Annotated[str, Field(min_length=3, max_length=128)]
+    username: Annotated[str, Field(min_length=3, max_length=64)]
+    password_hash: str
 
 
 class PublicUser(BaseModel):
@@ -64,36 +55,21 @@ class UpdateUser(BaseModel):
         return validate_password(value)
 
 
-class UpdateUserExtended(UpdateUser):
+class UpdateUserDB(BaseModel):
+    nickname: Annotated[Optional[str], Field(None, min_length=3, max_length=128)]
     password_hash: Annotated[Optional[str], Field(None)]
+    birthday: Annotated[Optional[date], Field(None)]
+    bio: Annotated[Optional[str], Field(None)]
     avatar_name: Annotated[Optional[str], Field(None)]
     avatar_type: Annotated[Optional[str], Field(None)]
 
 
-class SearchUser(AnswerLimit):
-    nickname: Annotated[str, Field(min_length=3, max_length=128)]
-
-    @field_validator('nickname', mode='before')
-    def validate_nicknames(cls, value):
-        return validate_nicknames(value)
+class Avatar(BaseModel):
+    file: bytes
+    file_name: str
+    content_type: str
 
 
-class GetUsers(BaseModel):
-    users_ids: list[int]
-
-    @field_validator('users_ids', mode='after')
-    def set_limits(cls, values):
-        return request_limit(values)
-
-
-class Avatars(UserIds):
-    pass
-
-
-class UserOnline(UserIds):
-    pass
-
-
-class UserOnlineExtended(BaseModel):
+class UserOnline(BaseModel):
     user_id: int
     last_online: Optional[datetime]

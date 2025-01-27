@@ -4,10 +4,10 @@ from sqlalchemy.orm import selectinload
 
 from models import Users, Conversations
 from database import session
-from schemas import AuthorizeUser, CreateUserExtended, UpdateUserExtended, UserOnline, SearchUser
+from schemas import CreateUserDB, UpdateUserDB
 
 
-async def check_user_is_existed(user_id: int) -> bool:
+async def is_user_exists(user_id: int) -> bool:
     async with session() as cursor:
         query = (
             select(Users.id)
@@ -20,11 +20,11 @@ async def check_user_is_existed(user_id: int) -> bool:
         return False
 
 
-async def get_user_by_username_from_db(user_data: AuthorizeUser) -> tuple[int, str]:
+async def fetch_user_credentials_by_username(username: str) -> tuple[int, str]:
     async with session() as cursor:
         query = (
             select(Users.id, Users.password_hash)
-            .filter_by(username=user_data.username)
+            .filter_by(username=username)
         )
         raw_data = await cursor.execute(query)
         raw_data = raw_data.first()
@@ -32,17 +32,17 @@ async def get_user_by_username_from_db(user_data: AuthorizeUser) -> tuple[int, s
         return raw_data
 
 
-async def insert_user_in_db(user_data: CreateUserExtended) -> None:
+async def create_user_in_db(user_data: CreateUserDB) -> None:
     async with session() as cursor:
         query = (
             insert(Users)
-            .values(**user_data.model_dump(exclude={"password"}))
+            .values(**user_data.model_dump())
         )
         await cursor.execute(query)
         await cursor.commit()
 
 
-async def get_user_from_db(user_id: int) -> Users:
+async def fetch_user_from_db(user_id: int) -> Users:
     async with session() as cursor:
         query = (
             select(Users)
@@ -55,11 +55,10 @@ async def get_user_from_db(user_id: int) -> Users:
         return raw_data
 
 
-async def get_users_from_db(users_ids: list[int]) -> list[Users]:
+async def fetch_users_from_db(users_ids: list[int]) -> list[Users]:
     async with session() as cursor:
         query = (
             select(Users)
-            .options(selectinload(Users.conversations).selectinload(Conversations.members))
             .filter(Users.id.in_(users_ids))
         )
         raw_data = await cursor.execute(query)
@@ -68,19 +67,19 @@ async def get_users_from_db(users_ids: list[int]) -> list[Users]:
         return raw_data
 
 
-async def get_users_by_nickname_from_db(search_params: SearchUser) -> list[Users]:
+async def search_users_in_db(search_query: str, limit: int | None) -> list[Users]:
 
     async def query_builder():
-        if search_params.limit == 0:
+        if limit is None:
             _query = (
                 select(Users)
-                .filter(Users.nickname.icontains(search_params.nickname))
+                .filter(Users.nickname.icontains(search_query))
             )
         else:
             _query = (
                 select(Users)
-                .filter(Users.nickname.icontains(search_params.nickname))
-                .limit(search_params.limit)
+                .filter(Users.nickname.icontains(search_query))
+                .limit(limit)
             )
 
         return _query
@@ -93,12 +92,12 @@ async def get_users_by_nickname_from_db(search_params: SearchUser) -> list[Users
         return raw_data
 
 
-async def update_user_in_db(user_id: int, user_data: UpdateUserExtended) -> None:
+async def update_user_in_db(user_id: int, user_data: UpdateUserDB) -> None:
     async with session() as cursor:
         query = (
             update(Users)
             .filter_by(id=user_id)
-            .values(**user_data.model_dump(exclude_none=True, exclude={"password"}))
+            .values(**user_data.model_dump(exclude_none=True))
         )
         await cursor.execute(query)
         await cursor.commit()
@@ -129,11 +128,11 @@ async def update_user_last_online_in_db(user_id: int) -> None:
         await cursor.commit()
 
 
-async def get_users_online_from_db(users: UserOnline) -> list[tuple[int, datetime]]:
+async def get_users_last_online_from_db(users_ids: list[int]) -> list[tuple[int, datetime]]:
     async with session() as cursor:
         query = (
             select(Users.id, Users.last_online)
-            .filter(Users.id.in_(users.users_ids))
+            .filter(Users.id.in_(users_ids))
         )
         raw_data = await cursor.execute(query)
         raw_data = raw_data.all()

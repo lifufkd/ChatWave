@@ -1,24 +1,24 @@
 from sqlalchemy.exc import IntegrityError
-from schemas import AuthorizeUser, CreateUser, CreateUserExtended
-from repository import get_user_by_username_from_db, insert_user_in_db
+from schemas import CreateUser, CreateUserDB
+from repository import fetch_user_credentials_by_username, create_user_in_db
 from utilities import Hash, JWT, UserNotFoundError, InvalidPasswordError, UserAlreadyExists
 
 
-async def get_access_token(request_data: AuthorizeUser) -> str:
-    user_data = await get_user_by_username_from_db(request_data)
+async def get_access_token(username: str, password: str) -> str:
+    user_data = await fetch_user_credentials_by_username(username)
 
     if not user_data:
         raise UserNotFoundError()
 
-    request_data.id = user_data[0]
-    request_data.password_hash = user_data[1]
+    user_id = user_data[0]
+    password_hash = user_data[1]
 
-    if not Hash.verify_password(plain_password=request_data.password, hashed_password=request_data.password_hash):
+    if not Hash.verify_password(plain_password=password, hashed_password=password_hash):
         raise InvalidPasswordError()
 
     access_token = JWT.create_token(
         {
-            "id": request_data.id
+            "id": user_id
         }
     )
 
@@ -26,10 +26,12 @@ async def get_access_token(request_data: AuthorizeUser) -> str:
 
 
 async def add_user(request_data: CreateUser) -> None:
-    user_obj = CreateUserExtended(**request_data.model_dump())
-    user_obj.password_hash = Hash.hash_password(user_obj.password)
+    new_user_obj = CreateUserDB(
+        password_hash=Hash.hash_password(request_data.password),
+        **request_data.model_dump()
+    )
     try:
-        await insert_user_in_db(user_obj)
+        await create_user_in_db(new_user_obj)
     except IntegrityError:
         raise UserAlreadyExists()
 

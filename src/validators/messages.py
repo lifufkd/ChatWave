@@ -1,6 +1,11 @@
 from validators.conversations import conversation_is_existed
-from repository import check_message_is_existed, get_message_from_db, check_messages_is_existed, get_messages_from_db, \
-    get_user_from_db, get_conversation_member_role_from_db
+from repository import (
+    check_message_is_existed,
+    get_message_from_db,
+    check_messages_is_existed,
+    get_messages_from_db,
+    get_conversation_member_role_from_db
+)
 from utilities import MessageNotFound, AccessDeniedError, ConversationTypes, ConversationMemberRoles
 from validators import validate_user_in_conversation, validate_user_in_conversations
 

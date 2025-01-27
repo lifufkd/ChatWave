@@ -1,5 +1,10 @@
-from repository import check_is_conversation_existed, get_user_from_db, get_conversation_type, get_conversation_from_db, \
+from repository import (
+    check_is_conversation_existed,
+    fetch_user_from_db,
+    get_conversation_type,
+    get_conversation_from_db,
     get_conversation_member_role_from_db
+)
 from models import Users
 from utilities import ConversationNotFoundError, AccessDeniedError, ConversationTypes, IsNotAGroupError, \
     IsNotAChatError, ConversationMemberRoles
@@ -32,7 +37,7 @@ async def validate_user_in_group(user_id: int, group_id: int):
     await conversation_is_existed(conversation_id=group_id)
     await conversation_is_group(conversation_id=group_id)
 
-    current_user_obj = await get_user_from_db(user_id)
+    current_user_obj = await fetch_user_from_db(user_id)
     current_user_conversations_ids = await get_user_conversation_ids(current_user_obj)
     if group_id not in current_user_conversations_ids:
         raise AccessDeniedError()
@@ -42,7 +47,7 @@ async def validate_user_in_chat(user_id: int, chat_id: int):
     await conversation_is_existed(conversation_id=chat_id)
     await conversation_is_chat(conversation_id=chat_id)
 
-    current_user_obj = await get_user_from_db(user_id)
+    current_user_obj = await fetch_user_from_db(user_id)
     current_user_conversations_ids = await get_user_conversation_ids(current_user_obj)
     if chat_id not in current_user_conversations_ids:
         raise AccessDeniedError()
@@ -50,14 +55,14 @@ async def validate_user_in_chat(user_id: int, chat_id: int):
 
 async def validate_user_in_conversation(user_id: int, conversation_id: int) -> None:
     await conversation_is_existed(conversation_id=conversation_id)
-    current_user_obj = await get_user_from_db(user_id=user_id)
+    current_user_obj = await fetch_user_from_db(user_id=user_id)
     current_user_conversations_ids = await get_user_conversation_ids(current_user_obj)
     if conversation_id not in current_user_conversations_ids:
         raise AccessDeniedError()
 
 
 async def validate_user_in_conversations(user_id: int, conversations_ids: list[int]) -> None:
-    current_user_obj = await get_user_from_db(user_id=user_id)
+    current_user_obj = await fetch_user_from_db(user_id=user_id)
     current_user_conversations_ids = await get_user_conversation_ids(current_user_obj)
 
     for conversation_id in conversations_ids:

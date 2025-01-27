@@ -9,13 +9,13 @@ from validators import (
 )
 from models import Users, Conversations
 from repository import (
-    check_user_is_existed,
+    is_user_exists,
     add_conversation_in_db,
     add_conversation_members_in_db,
     get_conversation_from_db,
     update_conversation_in_db,
     get_conversations_from_db,
-    get_user_from_db,
+    fetch_user_from_db,
     check_is_conversation_existed,
     get_conversation_type,
     delete_conversation_avatar_from_db,
@@ -63,7 +63,7 @@ async def validate_group(current_user_id: int, group_id: int):
     if (await get_conversation_type(conversation_id=group_id)) != ConversationTypes.GROUP:
         raise IsNotAGroupError()
 
-    current_user_obj = await get_user_from_db(current_user_id)
+    current_user_obj = await fetch_user_from_db(current_user_id)
     current_user_conversations_ids = await get_conversations_ids(current_user_obj)
     if group_id not in current_user_conversations_ids:
         raise AccessDeniedError()
@@ -74,11 +74,11 @@ async def add_chat_conversation(current_user_id: int, companion_id: int):
     if current_user_id == companion_id:
         raise SameUsersIds()
 
-    if not (await check_user_is_existed(user_id=current_user_id)):
+    if not (await is_user_exists(user_id=current_user_id)):
         raise UserNotFoundError()
 
-    current_user_obj = await get_user_from_db(current_user_id)
-    companion_obj = await get_user_from_db(companion_id)
+    current_user_obj = await fetch_user_from_db(current_user_id)
+    companion_obj = await fetch_user_from_db(companion_id)
     current_user_conversations_ids = await get_conversations_ids(current_user_obj)
     companion_conversations_ids = await get_conversations_ids(companion_obj)
 
@@ -99,7 +99,7 @@ async def add_chat_conversation(current_user_id: int, companion_id: int):
 
 async def add_group_conversation(current_user_id: int, group_data: CreateGroup):
 
-    current_user_obj = await get_user_from_db(current_user_id)
+    current_user_obj = await fetch_user_from_db(current_user_id)
 
     new_conversation_obj = Conversations(
         creator_id=current_user_id,
@@ -137,7 +137,7 @@ async def add_members_to_conversation(current_user_id: int, request_data: AddMem
 
     users_objs = list()
     for user_id in request_data.users_ids:
-        user_obj = await get_user_from_db(user_id=user_id)
+        user_obj = await fetch_user_from_db(user_id=user_id)
         if user_obj is None:
             raise UserNotFoundError(detail=f"User with id {user_id} not found")
 
@@ -200,7 +200,7 @@ async def get_groups_avatars_paths(current_user_id: int, request_obj: Conversati
         if (await get_conversation_type(conversation_id=group_id)) != ConversationTypes.GROUP:
             raise IsNotAGroupError()
 
-    current_user_obj = await get_user_from_db(current_user_id)
+    current_user_obj = await fetch_user_from_db(current_user_id)
     current_user_conversations_ids = await get_conversations_ids(current_user_obj)
 
     if not set(current_user_conversations_ids).intersection(set(request_obj.conversations_ids)):
