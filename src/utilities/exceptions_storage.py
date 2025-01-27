@@ -10,7 +10,8 @@ class InvalidCredentials(Exception):
 
 
 class UserNotFoundError(Exception):
-    def __init__(self, detail: str = ""):
+    def __init__(self):
+        detail = "User not found"
         super().__init__(detail)
 
 
@@ -31,11 +32,18 @@ class IsNotAChatError(Exception):
 
 
 class InvalidPasswordError(Exception):
-    pass
+    def __init__(self):
+        detail = "Invalid password"
+        super().__init__(detail)
 
 
 class UserAlreadyExists(Exception):
-    pass
+    def __init__(self, user_id: int | None = None):
+        if user_id is not None:
+            detail = f"User with id ({user_id}) already exists"
+        else:
+            detail = f"User already exists"
+        super().__init__(detail)
 
 
 class InvalidFileType(Exception):
@@ -89,7 +97,9 @@ class SameUsersIds(Exception):
 
 
 class FileNotFound(Exception):
-    pass
+    def __init__(self):
+        detail = "File not found"
+        super().__init__(detail)
 
 
 class UserAlreadyInConversation(Exception):
