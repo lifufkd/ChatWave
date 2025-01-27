@@ -2,7 +2,7 @@ from io import BytesIO
 from pathlib import Path
 
 from .base import BaseStorage
-from utilities import generic_settings, InvalidFileType, FIleToBig, ImageCorrupted, MessagesTypes
+from utilities import MessagesTypes, MediaPatches
 from .utils import StorageUtils
 
 
@@ -12,9 +12,9 @@ class FileManager(BaseStorage):
 
     @staticmethod
     def create_folders_structure():
-        users_avatar_folder = generic_settings.MEDIA_FOLDER / "users" / "avatars"
-        groups_avatar_folder = generic_settings.MEDIA_FOLDER / "groups" / "avatars"
-        media_messages_folder = generic_settings.MEDIA_FOLDER / "messages" / "media"
+        users_avatar_folder = MediaPatches.USERS_AVATARS_FOLDER.value
+        groups_avatar_folder = MediaPatches.GROUPS_AVATARS_FOLDER.value
+        media_messages_folder = MediaPatches.MEDIA_MESSAGES_FOLDER.value
         for folder in [users_avatar_folder, groups_avatar_folder, media_messages_folder]:
             StorageUtils.create_directory(path=folder)
 
@@ -47,5 +47,3 @@ class FileManager(BaseStorage):
 
     async def detect_file_type(self, file_type: str) -> MessagesTypes:
         return await StorageUtils().detect_file_type(file_type=file_type)
-
-
