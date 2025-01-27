@@ -80,9 +80,10 @@ class StorageUtils:
         match file_type:
             case MessagesTypes.IMAGE:
                 try:
-                    image = Image.open(file)
+                    image = Image.open(BytesIO(file))
                     image.verify()
-                except:
+                except Exception as e:
+                    print(e)
                     return False
             case MessagesTypes.VIDEO:
                 pass
@@ -96,12 +97,7 @@ class StorageUtils:
     @staticmethod
     async def validate_file_type(
             file_type: str | None,
-            allowed_file_type:
-            Union[
-                Iterable[generic_settings.ALLOWED_IMAGE_TYPES],
-                Iterable[generic_settings.ALLOWED_VIDEO_TYPES],
-                Iterable[generic_settings.ALLOWED_AUDIO_TYPES]
-            ]
+            allowed_file_type
     ) -> bool:
         if file_type not in allowed_file_type:
             return False
