@@ -19,7 +19,7 @@ primary_key_type = Annotated[int, mapped_column(primary_key=True)]
 
 
 class ConversationMemberRoles(Enum):
-    CREATOR = 'CREATOR'
+    CREATOR = 'creator'
     ADMIN = "admin"
     MEMBER = "member"
 
