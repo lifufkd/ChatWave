@@ -4,6 +4,8 @@ from datetime import datetime
 from typing import Annotated
 from enum import Enum
 
+from utilities import generic_settings
+
 
 datetime_required_type = Annotated[datetime, mapped_column(nullable=False)]
 datetime_auto_set = Annotated[datetime, mapped_column(nullable=False, server_default=text("TIMEZONE('utc', now())"))]
@@ -48,3 +50,9 @@ class CallsStatus(Enum):
     COMING = 'coming'
     COMPLETED = 'completed'
     MISSED = 'missed'
+
+
+class MediaPatches(Enum):
+    USERS_AVATARS_FOLDER = generic_settings.MEDIA_FOLDER / "users" / "avatars"
+    GROUPS_AVATARS_FOLDER = generic_settings.MEDIA_FOLDER / "groups" / "avatars"
+    MEDIA_MESSAGES_FOLDER = generic_settings.MEDIA_FOLDER / "messages" / "media"
