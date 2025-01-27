@@ -8,15 +8,16 @@ from utilities import (
     datetime_not_required_type,
     text_not_required_type,
     primary_key_type,
-    datetime_auto_update
+    datetime_auto_update,
+    text_required_type
 )
 
 
 class Users(OrmBase):
     __tablename__ = "users"
     id: Mapped[primary_key_type]
-    username: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
-    password_hash: Mapped[str] = mapped_column(String(128), nullable=False)
+    username: Mapped[str] = mapped_column(String(64), index=True, unique=True, nullable=False)
+    password_hash: Mapped[text_required_type]
     nickname: Mapped[str] = mapped_column(String(128), index=True, nullable=False)
     birthday: Mapped[date] = mapped_column(nullable=True)
     bio: Mapped[text_not_required_type]
@@ -40,8 +41,3 @@ class Users(OrmBase):
         back_populates="caller"
     )
     unread_messages: Mapped[list["UnreadMessages"]] = relationship()
-
-    __table_args__ = (
-        Index('ix_users_username_passwordhash', 'username', 'password_hash'),
-    )
-

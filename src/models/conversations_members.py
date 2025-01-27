@@ -1,5 +1,6 @@
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, text
 from sqlalchemy.orm import Mapped, mapped_column
+from datetime import datetime
 
 from database import OrmBase
 from utilities import ConversationMemberRoles, datetime_auto_set
@@ -16,6 +17,10 @@ class ConversationMembers(OrmBase):
         primary_key=True
     )
 
-    role: Mapped[ConversationMemberRoles] = mapped_column(nullable=False)
-    joined_at: Mapped[datetime_auto_set]
+    role: Mapped[ConversationMemberRoles] = mapped_column(nullable=False, index=True)
+    joined_at: Mapped[datetime] = mapped_column(
+        nullable=False,
+        index=True,
+        server_default=text("TIMEZONE('utc', now())")
+    )
 
