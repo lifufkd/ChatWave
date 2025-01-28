@@ -12,12 +12,13 @@ from .users import (
 from .conversations import (
     CreateGroup,
     EditConversation,
-    EditConversationExtended,
-    AddMembersToConversation,
+    EditConversationDB,
     GetConversations,
-    GetConversationsExtended,
+    GetConversationsDB,
     DeleteGroupMembers,
-    ConversationsIds
+    ConversationsIds,
+    CreateEmptyConversation,
+    CreateGroupDB
 )
 from .messages import (
     CreateTextMessage,

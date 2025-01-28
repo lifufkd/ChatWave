@@ -13,17 +13,17 @@ from .users import (
     delete_user_from_db
 )
 from .conversations import (
-    add_conversation_in_db,
-    get_conversation_from_db,
-    get_conversations_from_db,
-    update_conversation_in_db,
-    check_is_conversation_existed,
-    get_conversation_type,
+    insert_conversation_into_db,
+    fetch_conversation_from_db,
+    fetch_conversations_from_db,
+    update_conversation_details_in_db,
+    is_conversation_exists,
+    fetch_conversation_type_from_db,
     delete_conversation_avatar_from_db,
     delete_conversation_in_db
 )
 from .conversations_members import (
-    add_conversation_members_in_db,
+    add_members_to_conversation_in_db,
     get_conversation_member_role_from_db,
     delete_conversation_members_in_db,
     get_conversation_members_quantity_in_db,

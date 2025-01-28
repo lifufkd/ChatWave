@@ -32,7 +32,8 @@ from .exceptions_storage import (
     IsNotAGroupError,
     IsNotAChatError,
     UserAlreadyInConversation,
-    MessageNotFound
+    MessageNotFound,
+    UserNotInConversation
 )
 from .models_validators import validate_password, validate_nicknames, request_limit, ValidateModelNotEmpty
 

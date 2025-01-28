@@ -13,18 +13,19 @@ from .users import (
     remove_user_account
 )
 from .conversations import (
-    add_chat_conversation,
-    add_group_conversation,
-    update_conversation,
-    update_group_avatar,
-    get_group_avatar_path,
-    get_groups_avatars_paths,
-    delete_group_avatar,
-    add_members_to_conversation,
-    delete_members_from_group,
-    delete_conversation,
+    create_private_conversation,
+    create_group_conversation,
+    edit_group_details,
+    upload_group_avatar,
+    fetch_group_avatar_path,
+    fetch_group_avatars_paths,
+    remove_group_avatar,
+    add_group_members,
+    remove_group_members,
+    delete_conversation_by_id,
     leave_group,
-    search_messages
+    search_conversation_messages,
+    delete_all_messages
 )
 from .messages import (
     create_text_message,
@@ -33,6 +34,5 @@ from .messages import (
     get_messages,
     get_message_media_path,
     get_messages_media_paths,
-    delete_all_messages,
     delete_messages
 )
