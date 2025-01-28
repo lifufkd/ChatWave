@@ -159,12 +159,6 @@ async def get_messages_media_paths(sender_id: int, messages_ids: list[int]) -> l
     return messages_paths
 
 
-async def delete_all_messages(current_user_id: int, chat_id: int):
-    await validate_user_in_chat(user_id=current_user_id, chat_id=chat_id)
-
-    await delete_conversation_messages_from_db(conversation_id=chat_id)
-
-
 async def delete_messages(current_user_id: int, messages_ids: list[int]):
     await validate_user_can_manage_messages(user_id=current_user_id, messages_ids=messages_ids)
 

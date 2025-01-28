@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status, UploadFile, File, Query
+from fastapi import APIRouter, Depends, status, UploadFile, File, Query, Body
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi_cache.decorator import cache
 from typing import Annotated
@@ -10,11 +10,11 @@ from schemas import (
     Avatar,
     UsersIds,
     UserOnline,
-    GetConversationsExtended
+    GetConversationsDB
 )
 from dependencies import verify_token
 from storage import FileManager
-from validators import update_user_last_online, verify_user_is_existed
+from validators import update_user_last_online, verify_current_user_is_existed
 from services import (
     fetch_private_user,
     update_user_profile,
@@ -33,7 +33,7 @@ from services import (
 users_router = APIRouter(
     tags=["Users"],
     prefix="/users",
-    dependencies=[Depends(update_user_last_online), Depends(verify_user_is_existed)]
+    dependencies=[Depends(update_user_last_online), Depends(verify_current_user_is_existed)]
 )
 
 anonymous_users_router = APIRouter(
@@ -46,7 +46,7 @@ anonymous_users_router = APIRouter(
 async def get_current_user(
         current_user_id: Annotated[int, Depends(verify_token)]
 ):
-    profile_data = await fetch_private_user(current_user_id)
+    profile_data = await fetch_private_user(user_id=current_user_id)
     return profile_data
 
 
@@ -77,14 +77,14 @@ async def get_user_avatar(
 
 @anonymous_users_router.get("/avatars", status_code=status.HTTP_200_OK)
 async def get_users_avatars(
-        avatars: UsersIds = Query()
+        user_id: UsersIds = Query()
 ):
-    avatars_paths = await fetch_users_avatars_paths(avatars.users_ids)
+    avatars_paths = await fetch_users_avatars_paths(users_ids=user_id.users_ids)
     zip_obj = await FileManager().archive_files(avatars_paths)
     return StreamingResponse(zip_obj, media_type="application/zip")
 
 
-@users_router.get("/conversations", status_code=status.HTTP_200_OK, response_model=list[GetConversationsExtended])
+@users_router.get("/conversations", status_code=status.HTTP_200_OK, response_model=list[GetConversationsDB])
 async def get_current_user_conversations(
         current_user_id: Annotated[int, Depends(verify_token)]
 ):
@@ -94,9 +94,9 @@ async def get_current_user_conversations(
 
 @anonymous_users_router.get("/last_online", status_code=status.HTTP_200_OK, response_model=list[UserOnline])
 async def get_users_last_online(
-        users_ids: UsersIds = Query()
+        user_id: UsersIds = Query()
 ):
-    users_last_online = await fetch_users_online_status(users_ids=users_ids.users_ids)
+    users_last_online = await fetch_users_online_status(users_ids=user_id.users_ids)
     return users_last_online
 
 
@@ -116,7 +116,7 @@ async def update_current_user_avatar(
 @users_router.patch("/me", status_code=status.HTTP_204_NO_CONTENT)
 async def update_current_user(
         current_user_id: Annotated[int, Depends(verify_token)],
-        request: UpdateUser
+        request: UpdateUser = Body()
 ):
     await update_user_profile(user_id=current_user_id, profile_data=request)
 
@@ -139,7 +139,7 @@ async def current_user_leave_from_group(
         delete_messages: bool = False
 ):
     await leave_group(
-        current_user_id=current_user_id,
+        user_id=current_user_id,
         group_id=group_id,
         delete_messages=delete_messages
     )

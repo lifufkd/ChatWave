@@ -13,9 +13,18 @@ class ConversationsIds(BaseModel):
         return request_limit(values)
 
 
+class CreateEmptyConversation(BaseModel):
+    creator_id: int
+    type: ConversationTypes
+
+
 class CreateGroup(BaseModel):
     name: Annotated[str, Field(min_length=1, max_length=64)]
     description: Annotated[Optional[str], Field(None)]
+
+
+class CreateGroupDB(CreateEmptyConversation, CreateGroup):
+    pass
 
 
 class EditConversation(ValidateModelNotEmpty):
@@ -23,17 +32,9 @@ class EditConversation(ValidateModelNotEmpty):
     description: Annotated[Optional[str], Field(None)]
 
 
-class EditConversationExtended(EditConversation):
+class EditConversationDB(EditConversation):
     avatar_name: Annotated[Optional[str], Field(None)]
     avatar_type: Annotated[Optional[str], Field(None)]
-
-
-class AddMembersToConversation(BaseModel):
-    users_ids: list[int]
-
-    @field_validator('users_ids', mode='after')
-    def set_limits(cls, values):
-        return request_limit(values)
 
 
 class GetConversations(BaseModel):
@@ -47,7 +48,7 @@ class GetConversations(BaseModel):
     updated_at: Optional[datetime]
 
 
-class GetConversationsExtended(GetConversations):
+class GetConversationsDB(GetConversations):
     members_ids: list[int]
 
 

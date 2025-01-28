@@ -1,19 +1,26 @@
-from sqlalchemy import select, delete, and_, func, update, asc
+from sqlalchemy import select, delete, and_, func, update, asc, insert
 from models import Users, ConversationMembers
 from utilities import ConversationMemberRoles
 from database import session
 
 
-async def add_conversation_members_in_db(users_objects: list[Users], conversation_id: int, role: ConversationMemberRoles) -> None:
+async def add_members_to_conversation_in_db(
+        users_ids: list[int],
+        conversation_id: int,
+        role: ConversationMemberRoles
+) -> None:
     async with session() as cursor:
-        for user_id in users_objects:
-            cursor.add(
-                ConversationMembers(
-                    user_id=user_id.id,
+        for user_id in users_ids:
+            query = (
+                insert(ConversationMembers)
+                .values(
+                    user_id=user_id,
                     conversation_id=conversation_id,
-                    role=role
+                    role=role,
                 )
             )
+            await cursor.execute(query)
+
         await cursor.commit()
 
 

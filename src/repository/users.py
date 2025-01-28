@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import select, insert, update, text, delete
+from sqlalchemy import select, insert, update, text, delete, func
 from sqlalchemy.orm import selectinload
 
 from models import Users, Conversations

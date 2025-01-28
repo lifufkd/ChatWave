@@ -9,6 +9,7 @@ from repository import (
     delete_conversation_in_db,
     delete_user_from_db
 )
+from validators import verify_user_is_existed, verify_users_is_existed
 from schemas import (
     PrivateUser,
     UpdateUser,
@@ -17,7 +18,7 @@ from schemas import (
     UserOnline,
     Avatar,
     GetConversations,
-    GetConversationsExtended
+    GetConversationsDB
 )
 from .conversations import leave_group
 from storage import FileManager
@@ -43,6 +44,8 @@ async def fetch_private_user(user_id: int) -> PrivateUser:
 
 
 async def fetch_public_users(users_ids: list[int]) -> list[PublicUser]:
+    await verify_users_is_existed(users_ids=users_ids)
+
     raw_users = await fetch_users_from_db(users_ids=users_ids)
     users_objs = await many_sqlalchemy_to_pydantic(
         sqlalchemy_models=raw_users,
@@ -72,7 +75,7 @@ async def search_users_by_nickname(search_query: str, limit: int | None) -> list
     return users_objs
 
 
-async def fetch_user_conversations(user_id: int) -> list[GetConversationsExtended]:
+async def fetch_user_conversations(user_id: int) -> list[GetConversationsDB]:
     result = list()
     raw_user = await fetch_user_from_db(user_id=user_id)
 
@@ -85,7 +88,7 @@ async def fetch_user_conversations(user_id: int) -> list[GetConversationsExtende
             members_ids.append(member.id)
 
         part_obj = GetConversations.model_validate(conversation_obj, from_attributes=True)
-        full_obj = GetConversationsExtended(
+        full_obj = GetConversationsDB(
             members_ids=members_ids,
             **part_obj.model_dump()
         )
@@ -125,6 +128,8 @@ async def upload_user_avatar(user_id: int, avatar_data: Avatar) -> None:
 
 
 async def fetch_user_avatar_path(user_id: int) -> Path:
+    await verify_user_is_existed(user_id=user_id)
+
     user_obj = await fetch_private_user(user_id=user_id)
     filepath = MediaPatches.USERS_AVATARS_FOLDER.value / f"{user_obj.avatar_name}"
     if not await FileManager().file_exists(file_path=filepath):
@@ -135,6 +140,8 @@ async def fetch_user_avatar_path(user_id: int) -> Path:
 
 async def fetch_users_avatars_paths(users_ids: list[int]) -> list[Path]:
     avatars_paths = list()
+    await verify_users_is_existed(users_ids=users_ids)
+
     users_objects = await fetch_private_users(users_ids=users_ids)
     for user_obj in users_objects:
         if user_obj.avatar_name is None:
@@ -153,7 +160,9 @@ async def remove_user_avatar(user_id: int, avatar_path: Path) -> None:
     await delete_user_avatar_in_db(user_id=user_id)
 
 
-async def fetch_users_online_status(users_ids: list[int]) -> list[UserOnline]:
+async def fetch_users_online_status(users_ids: list[int]) -> list[UserOnline] | list:
+    await verify_users_is_existed(users_ids=users_ids)
+
     raw_data = await get_users_last_online_from_db(users_ids=users_ids)
     users_objs = list()
     for item in raw_data:
@@ -172,6 +181,6 @@ async def remove_user_account(user_id: int) -> None:
         if conversation_obj.type == ConversationTypes.PRIVATE:
             await delete_conversation_in_db(conversation_id=conversation_obj.id)
         else:
-            await leave_group(current_user_id=user_id, group_id=conversation_obj.id)
+            await leave_group(user_id=user_id, group_id=conversation_obj.id)
 
     await delete_user_from_db(user_id=user_id)

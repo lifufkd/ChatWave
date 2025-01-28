@@ -3,7 +3,7 @@ from fastapi.responses import FileResponse, StreamingResponse
 from typing import Annotated, Optional
 
 from dependencies import verify_token
-from validators import update_user_last_online, verify_user_is_existed
+from validators import update_user_last_online, verify_current_user_is_existed
 from storage import FileManager
 from services import (
     create_text_message,
@@ -18,7 +18,7 @@ from schemas import CreateTextMessage, CreateMediaMessage, UpdateMessage, Messag
 messages_router = APIRouter(
     prefix="/messages",
     tags=["Messages"],
-    dependencies=[Depends(update_user_last_online), Depends(verify_user_is_existed)]
+    dependencies=[Depends(update_user_last_online), Depends(verify_current_user_is_existed)]
 )
 
 
