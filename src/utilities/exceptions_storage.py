@@ -10,25 +10,48 @@ class InvalidCredentials(Exception):
 
 
 class UserNotFoundError(Exception):
-    def __init__(self):
-        detail = "User not found"
+    def __init__(self, user_id: int | None = None):
+        if user_id is None:
+            detail = "User not found"
+        else:
+            detail = f"User with id ({user_id}) not found"
         super().__init__(detail)
 
 
 class ConversationNotFoundError(Exception):
-    pass
+    def __init__(self, conversation_id: int | None = None):
+        if conversation_id is None:
+            detail = "Conversation not found"
+        else:
+            detail = f"Conversation with id ({conversation_id}) not found"
+        super().__init__(detail)
 
 
 class AccessDeniedError(Exception):
-    pass
+    def __init__(self, conversation_id: int | None = None):
+        if conversation_id is None:
+            detail = "You does not have permission to access this conversation"
+        else:
+            detail = f"You does not have permission to access conversation with id ({conversation_id})"
+        super().__init__(detail)
 
 
 class IsNotAGroupError(Exception):
-    pass
+    def __init__(self, conversation_id: int | None = None):
+        if conversation_id is None:
+            detail = "Conversation not a group"
+        else:
+            detail = f"Conversation with id ({conversation_id}) not a group"
+        super().__init__(detail)
 
 
 class IsNotAChatError(Exception):
-    pass
+    def __init__(self, conversation_id: int | None = None):
+        if conversation_id is None:
+            detail = "Conversation not a chat"
+        else:
+            detail = f"Conversation with id ({conversation_id}) not a chat"
+        super().__init__(detail)
 
 
 class InvalidPasswordError(Exception):
@@ -89,11 +112,15 @@ class ImageCorrupted(Exception):
 
 
 class ChatAlreadyExists(Exception):
-    pass
+    def __init__(self):
+        detail = f"Chat already exists"
+        super().__init__(detail)
 
 
 class SameUsersIds(Exception):
-    pass
+    def __init__(self):
+        detail = f"You cant perform this operation with your self"
+        super().__init__(detail)
 
 
 class FileNotFound(Exception):
@@ -103,7 +130,20 @@ class FileNotFound(Exception):
 
 
 class UserAlreadyInConversation(Exception):
-    def __init__(self, detail: str = ""):
+    def __init__(self, user_id: int | None = None, conversation_id: int | None = None):
+        if user_id is None:
+            detail = "User already in conversation"
+        else:
+            detail = f"User with id ({user_id}) already in conversation with id ({conversation_id})"
+        super().__init__(detail)
+
+
+class UserNotInConversation(Exception):
+    def __init__(self, user_id: int | None = None, conversation_id: int | None = None):
+        if user_id is None:
+            detail = "User not in conversation"
+        else:
+            detail = f"User with id ({user_id}) not in conversation with id ({conversation_id})"
         super().__init__(detail)
 
 
