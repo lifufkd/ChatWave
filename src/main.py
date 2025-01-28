@@ -30,7 +30,8 @@ from utilities import (
     SameUsersIds,
     FileNotFound,
     UserAlreadyInConversation,
-    MessageNotFound
+    MessageNotFound,
+    UserNotInConversation
 )
 
 
@@ -129,6 +130,11 @@ async def exception_handler(request, exc: Exception) -> JSONResponse:
                 content={"detail": str(exc)}
             )
         case MessageNotFound():
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={"detail": str(exc)}
+            )
+        case UserNotInConversation():
             return JSONResponse(
                 status_code=status.HTTP_404_NOT_FOUND,
                 content={"detail": str(exc)}
