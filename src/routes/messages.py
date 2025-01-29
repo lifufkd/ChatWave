@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, UploadFile, File, status, Form, Query
+from fastapi import APIRouter, Depends, UploadFile, File, status, Query, Body, Form
 from fastapi.responses import FileResponse, StreamingResponse
 from typing import Annotated, Optional
 
@@ -8,12 +8,12 @@ from storage import FileManager
 from services import (
     create_text_message,
     create_media_message,
-    update_message,
-    get_message_media_path,
-    get_messages_media_paths,
-    delete_messages
+    update_user_message,
+    fetch_message_media_path,
+    fetch_messages_media_paths,
+    remove_messages
 )
-from schemas import CreateTextMessage, CreateMediaMessage, UpdateMessage, MessagesIds
+from schemas import CreateMediaMessage, MessagesIds, GetMessage, CreateTextMessage
 
 messages_router = APIRouter(
     prefix="/messages",
@@ -23,20 +23,20 @@ messages_router = APIRouter(
 
 
 @messages_router.get("/{message_id}/media", status_code=status.HTTP_200_OK)
-async def get_message_media_endpoint(
+async def get_message_media(
         current_user_id: Annotated[int, Depends(verify_token)],
         message_id: int
 ):
-    filepath = await get_message_media_path(sender_id=current_user_id, message_id=message_id)
+    filepath = await fetch_message_media_path(sender_id=current_user_id, message_id=message_id)
     return FileResponse(filepath)
 
 
 @messages_router.get("/media", status_code=status.HTTP_200_OK)
-async def get_messages_medias_endpoint(
+async def get_messages_medias(
         current_user_id: Annotated[int, Depends(verify_token)],
         message_id: MessagesIds = Query()
 ):
-    messages_media_paths = await get_messages_media_paths(
+    messages_media_paths = await fetch_messages_media_paths(
         sender_id=current_user_id,
         messages_ids=message_id.messages_ids
     )
@@ -44,18 +44,22 @@ async def get_messages_medias_endpoint(
     return StreamingResponse(zip_obj, media_type="application/zip")
 
 
-@messages_router.post("/{conversation_id}/text", status_code=status.HTTP_201_CREATED)
-async def send_text_message_endpoint(
+@messages_router.post("/{conversation_id}/text", status_code=status.HTTP_200_OK, response_model=GetMessage)
+async def send_text_message(
         current_user_id: Annotated[int, Depends(verify_token)],
         conversation_id: int,
-        content: CreateTextMessage
+        request: CreateTextMessage = Body()
 ):
-    await create_text_message(sender_id=current_user_id, conversation_id=conversation_id, content=content)
-    return {"detail": "Message sent successfully"}
+    new_message_obj = await create_text_message(
+        sender_id=current_user_id,
+        conversation_id=conversation_id,
+        content=request.content
+    )
+    return new_message_obj
 
 
-@messages_router.post("/{conversation_id}/media", status_code=status.HTTP_201_CREATED)
-async def send_media_message_endpoint(
+@messages_router.post("/{conversation_id}/media", status_code=status.HTTP_200_OK, response_model=GetMessage)
+async def send_media_message(
         current_user_id: Annotated[int, Depends(verify_token)],
         conversation_id: int,
         is_voice_message: bool = False,
@@ -69,23 +73,26 @@ async def send_media_message_endpoint(
         caption=caption,
         is_voice_message=is_voice_message
     )
-    await create_media_message(sender_id=current_user_id, conversation_id=conversation_id, content=new_message_obj)
-    return {"detail": "Message sent successfully"}
+    new_message_obj = await create_media_message(
+        sender_id=current_user_id,
+        conversation_id=conversation_id,
+        content_data=new_message_obj
+    )
+    return new_message_obj
 
 
 @messages_router.patch("/{message_id}", status_code=status.HTTP_202_ACCEPTED)
-async def update_message_endpoint(
+async def update_message(
         current_user_id: Annotated[int, Depends(verify_token)],
         message_id: int,
-        content: UpdateMessage
+        request: CreateTextMessage = Body()
 ):
-    await update_message(sender_id=current_user_id, message_id=message_id, message_data=content)
-    return {"detail": "Message successfully updated"}
+    await update_user_message(sender_id=current_user_id, message_id=message_id, content=request.content)
 
 
 @messages_router.delete("", status_code=status.HTTP_202_ACCEPTED)
-async def delete_messages_endpoint(
+async def delete_messages(
         current_user_id: Annotated[int, Depends(verify_token)],
-        message_id: list[int] = Query()
+        message_id: MessagesIds = Query()
 ):
-    await delete_messages(current_user_id=current_user_id, messages_ids=message_id)
+    await remove_messages(user_id=current_user_id, messages_ids=message_id.messages_ids)

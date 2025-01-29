@@ -5,19 +5,6 @@ from datetime import datetime
 from utilities import MessagesStatus, MessagesTypes, request_limit
 
 
-class GetMessages(BaseModel):
-    id: int
-    conversation_id: int
-    sender_id: int
-    status: MessagesStatus
-    type: MessagesTypes
-    content: Optional[str]
-    file_content_name: Optional[str]
-    file_content_type: Optional[str]
-    created_at: Optional[datetime]
-    updated_at: Optional[datetime]
-
-
 class MessagesIds(BaseModel):
     messages_ids: list[int]
 
@@ -27,7 +14,13 @@ class MessagesIds(BaseModel):
 
 
 class CreateTextMessage(BaseModel):
+    content: str = Field()
+
+
+class CreateTextMessageDB(BaseModel):
     content: str
+    status: MessagesStatus
+    type: MessagesTypes
 
 
 class CreateMediaMessage(BaseModel):
@@ -46,11 +39,14 @@ class CreateMediaMessageDB(BaseModel):
     content: Optional[str]
 
 
-class CreateTextMessageExtended(CreateTextMessage):
+class GetMessage(BaseModel):
+    id: int
+    conversation_id: int
+    sender_id: int
     status: MessagesStatus
     type: MessagesTypes
-
-
-class UpdateMessage(BaseModel):
-    content: str
-
+    content: Optional[str]
+    file_content_name: Optional[str]
+    file_content_type: Optional[str]
+    created_at: Optional[datetime]
+    updated_at: Optional[datetime]

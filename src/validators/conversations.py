@@ -95,7 +95,7 @@ async def validate_users_in_same_chat(user_id: int, recipient_id: int):
 
     for user_chat_id in user_chats_ids:
         if user_chat_id in recipient_chats_ids:
-            raise ChatAlreadyExists()
+            raise ChatAlreadyExists(chat_id=user_chat_id)
 
 
 async def validate_user_in_conversation(user_id: int, conversation_id: int) -> None:

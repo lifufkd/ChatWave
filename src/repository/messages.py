@@ -3,11 +3,11 @@ from sqlalchemy.orm import selectinload
 
 from models import Messages
 from database import session
-from schemas import CreateTextMessageExtended, CreateMediaMessageDB, UpdateMessage
+from schemas import CreateTextMessageDB, CreateMediaMessageDB
 from utilities import MessagesStatus
 
 
-async def check_message_is_existed(message_id: int) -> bool:
+async def is_message_exists(message_id: int) -> bool:
     async with session() as cursor:
         query = (
             select(Messages.id)
@@ -15,20 +15,6 @@ async def check_message_is_existed(message_id: int) -> bool:
         )
         result = await cursor.execute(query)
         if result.first():
-            return True
-
-        return False
-
-
-async def check_messages_is_existed(messages_ids: list[int]) -> bool:
-    async with session() as cursor:
-        query = (
-            select(func.count(Messages.id))
-            .filter(Messages.id.in_(messages_ids))
-        )
-        result = await cursor.execute(query)
-        result = result.scalar()
-        if result == len(messages_ids):
             return True
 
         return False
@@ -52,21 +38,23 @@ async def insert_empty_message(sender_id: int, conversation_id: int) -> int:
         return message_id
 
 
-async def insert_text_message_to_db(sender_id: int, conversation_id: int, message_data: CreateTextMessageExtended) -> None:
+async def insert_text_message(sender_id: int, conversation_id: int, message_data: CreateTextMessageDB) -> int:
     async with session() as cursor:
         query = (
-            insert(Messages)
+            insert(Messages).returning(Messages.id)
             .values(
                 sender_id=sender_id,
                 conversation_id=conversation_id,
                 **message_data.model_dump(exclude_none=True)
             )
         )
-        await cursor.execute(query)
+        raw_data = await cursor.execute(query)
         await cursor.commit()
 
+        return raw_data.scalar()
 
-async def insert_media_message_to_db(message_id: int, message_data: CreateMediaMessageDB) -> None:
+
+async def insert_media_message(message_id: int, message_data: CreateMediaMessageDB) -> None:
     async with session() as cursor:
         query = (
             update(Messages)
@@ -80,18 +68,18 @@ async def insert_media_message_to_db(message_id: int, message_data: CreateMediaM
         await cursor.commit()
 
 
-async def update_message_in_db(message_id: int, message_data: UpdateMessage) -> None:
+async def update_message(message_id: int, content: str) -> None:
     async with session() as cursor:
         query = (
             update(Messages)
             .filter_by(id=message_id)
-            .values(content=message_data.content)
+            .values(content=content)
         )
         await cursor.execute(query)
         await cursor.commit()
 
 
-async def get_message_from_db(message_id: int) -> Messages:
+async def get_message(message_id: int) -> Messages:
     async with session() as cursor:
         query = (
             select(Messages)
@@ -101,7 +89,7 @@ async def get_message_from_db(message_id: int) -> Messages:
         return result.scalar()
 
 
-async def get_messages_from_db(messages_ids: list[int]) -> list[Messages]:
+async def get_messages(messages_ids: list[int]) -> list[Messages]:
     async with session() as cursor:
         query = (
             select(Messages)
@@ -112,7 +100,7 @@ async def get_messages_from_db(messages_ids: list[int]) -> list[Messages]:
         return result.scalars()
 
 
-async def fetch_filtered_messages_from_db(conversation_id: int, limit: int, offset: int) -> list[Messages]:
+async def get_filtered_messages(conversation_id: int, limit: int, offset: int) -> list[Messages]:
     async with session() as cursor:
         query = (
             select(Messages)
@@ -132,7 +120,7 @@ async def fetch_filtered_messages_from_db(conversation_id: int, limit: int, offs
         return result
 
 
-async def search_messages_in_db(conversation_id: int, search_query: str) -> list[Messages]:
+async def search_messages(conversation_id: int, search_query: str) -> list[Messages]:
     async with session() as cursor:
         query = (
             select(Messages)
@@ -143,7 +131,7 @@ async def search_messages_in_db(conversation_id: int, search_query: str) -> list
         return result.scalars().all()
 
 
-async def delete_conversation_messages_from_db(conversation_id: int) -> None:
+async def delete_conversation_messages(conversation_id: int) -> None:
     async with session() as cursor:
         query = (
             delete(Messages)
@@ -153,7 +141,7 @@ async def delete_conversation_messages_from_db(conversation_id: int) -> None:
         await cursor.commit()
 
 
-async def delete_messages_from_db(messages_ids: list[int]) -> None:
+async def delete_messages(messages_ids: list[int]) -> None:
     async with session() as cursor:
         query = (
             delete(Messages)
