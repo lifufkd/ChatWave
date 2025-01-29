@@ -62,10 +62,10 @@ class InvalidPasswordError(Exception):
 
 class UserAlreadyExists(Exception):
     def __init__(self, user_id: int | None = None):
-        if user_id is not None:
-            detail = f"User with id ({user_id}) already exists"
-        else:
+        if user_id is None:
             detail = f"User already exists"
+        else:
+            detail = f"User with id ({user_id}) already exists"
         super().__init__(detail)
 
 
@@ -112,8 +112,11 @@ class ImageCorrupted(Exception):
 
 
 class ChatAlreadyExists(Exception):
-    def __init__(self):
-        detail = f"Chat already exists"
+    def __init__(self, chat_id: int | None = None):
+        if chat_id is None:
+            detail = f"Chat already exists"
+        else:
+            detail = f"Chat with id ({chat_id}) already exists"
         super().__init__(detail)
 
 
@@ -148,4 +151,9 @@ class UserNotInConversation(Exception):
 
 
 class MessageNotFound(Exception):
-    pass
+    def __init__(self, message_id: int | None = None):
+        if message_id is None:
+            detail = "Message not found"
+        else:
+            detail = f"Message with id ({message_id}) not found"
+        super().__init__(detail)
