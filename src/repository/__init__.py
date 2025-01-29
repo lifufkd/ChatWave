@@ -32,18 +32,17 @@ from .conversations_members import (
     update_conversation_member_in_db
 )
 from .messages import (
-    insert_text_message_to_db,
+    insert_text_message,
     insert_empty_message,
-    insert_media_message_to_db,
-    check_message_is_existed,
-    get_message_from_db,
-    update_message_in_db,
-    check_messages_is_existed,
-    get_messages_from_db,
-    fetch_filtered_messages_from_db,
-    delete_conversation_messages_from_db,
-    delete_messages_from_db,
+    insert_media_message,
+    is_message_exists,
+    get_message,
+    update_message,
+    get_messages,
+    get_filtered_messages,
+    delete_conversation_messages,
+    delete_messages,
     delete_sender_messages,
-    search_messages_in_db
+    search_messages
 )
 

@@ -22,10 +22,9 @@ from .conversations import (
 )
 from .messages import (
     CreateTextMessage,
-    CreateTextMessageExtended,
+    CreateTextMessageDB,
     CreateMediaMessage,
     CreateMediaMessageDB,
-    UpdateMessage,
-    GetMessages,
+    GetMessage,
     MessagesIds
 )

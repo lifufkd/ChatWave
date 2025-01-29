@@ -30,9 +30,9 @@ from .conversations import (
 from .messages import (
     create_text_message,
     create_media_message,
-    update_message,
-    get_messages,
-    get_message_media_path,
-    get_messages_media_paths,
-    delete_messages
+    update_user_message,
+    fetch_messages,
+    fetch_message_media_path,
+    fetch_messages_media_paths,
+    remove_messages
 )
