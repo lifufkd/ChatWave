@@ -26,8 +26,8 @@ from repository import (
     get_conversation_members_in_db,
     get_conversation_admin_members_from_db,
     update_conversation_member_in_db,
-    search_messages_in_db,
-    delete_conversation_messages_from_db
+    search_messages,
+    delete_conversation_messages
 )
 from storage import FileManager
 from utilities import (
@@ -47,7 +47,7 @@ from schemas import (
     EditConversation,
     EditConversationDB,
     DeleteGroupMembers,
-    GetMessages,
+    GetMessage,
     CreateEmptyConversation,
     GetConversations,
     Avatar,
@@ -225,13 +225,13 @@ async def delete_conversation_by_id(user_id: int, conversation_id: int) -> None:
     await delete_conversation_in_db(conversation_id=conversation_id)
 
 
-async def search_conversation_messages(user_id: int, conversations_id: int, search_query: str) -> list[GetMessages]:
+async def search_conversation_messages(user_id: int, conversations_id: int, search_query: str) -> list[GetMessage]:
     await validate_user_in_conversation(user_id=user_id, conversation_id=conversations_id)
 
-    raw_messages = await search_messages_in_db(conversation_id=conversations_id, search_query=search_query)
+    raw_messages = await search_messages(conversation_id=conversations_id, search_query=search_query)
     messages_objs = await many_sqlalchemy_to_pydantic(
         sqlalchemy_models=raw_messages,
-        pydantic_model=GetMessages
+        pydantic_model=GetMessage
     )
 
     return messages_objs
@@ -273,4 +273,4 @@ async def leave_group(user_id: int, group_id: int, delete_messages: bool = False
 async def delete_all_messages(user_id: int, conversation_id: int):
     await validate_user_in_chat(user_id=user_id, chat_id=conversation_id)
 
-    await delete_conversation_messages_from_db(conversation_id=conversation_id)
+    await delete_conversation_messages(conversation_id=conversation_id)

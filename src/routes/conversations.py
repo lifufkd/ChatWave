@@ -16,7 +16,7 @@ from services import (
     remove_group_members,
     delete_conversation_by_id,
     search_conversation_messages,
-    get_messages,
+    fetch_messages,
     delete_all_messages
 )
 from schemas import (
@@ -24,7 +24,7 @@ from schemas import (
     EditConversation,
     UsersIds,
     DeleteGroupMembers,
-    GetMessages,
+    GetMessage,
     ConversationsIds,
     GetConversations,
     Avatar
@@ -38,14 +38,14 @@ conversations_router = APIRouter(
 )
 
 
-@conversations_router.get("/{conversation_id}/messages", status_code=status.HTTP_200_OK, response_model=list[GetMessages])
+@conversations_router.get("/{conversation_id}/messages", status_code=status.HTTP_200_OK, response_model=list[GetMessage])
 async def get_messages_from_conversation(
         current_user_id: Annotated[int, Depends(verify_token)],
         conversation_id: int,
         limit: int = Query(10, ge=1, le=1000),
         offset: int = Query(0, ge=0),
 ):
-    messages_objs = await get_messages(
+    messages_objs = await fetch_messages(
         sender_id=current_user_id,
         conversation_id=conversation_id,
         limit=limit,
@@ -54,7 +54,7 @@ async def get_messages_from_conversation(
     return messages_objs
 
 
-@conversations_router.get("/{conversation_id}/messages/search", status_code=status.HTTP_200_OK, response_model=list[GetMessages])
+@conversations_router.get("/{conversation_id}/messages/search", status_code=status.HTTP_200_OK, response_model=list[GetMessage])
 async def search_messages_in_conversation(
         current_user_id: Annotated[int, Depends(verify_token)],
         conversation_id: int,
