@@ -1,5 +1,6 @@
 from fastapi import FastAPI, status
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from contextlib import asynccontextmanager
@@ -31,7 +32,8 @@ from utilities import (
     FileNotFound,
     UserAlreadyInConversation,
     MessageNotFound,
-    UserNotInConversation
+    UserNotInConversation,
+    FileRangeError
 )
 
 
@@ -49,6 +51,14 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.exception_handler(Exception)
 async def exception_handler(request, exc: Exception) -> JSONResponse:
@@ -137,6 +147,11 @@ async def exception_handler(request, exc: Exception) -> JSONResponse:
         case UserNotInConversation():
             return JSONResponse(
                 status_code=status.HTTP_404_NOT_FOUND,
+                content={"detail": str(exc)}
+            )
+        case FileRangeError():
+            return JSONResponse(
+                status_code=status.HTTP_416_REQUESTED_RANGE_NOT_SATISFIABLE,
                 content={"detail": str(exc)}
             )
 
