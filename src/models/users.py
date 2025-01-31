@@ -1,15 +1,16 @@
-from sqlalchemy import String, Index
+from sqlalchemy import String, Index, event
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from datetime import date
 
 from database import OrmBase
+from storage import FileManager
 from utilities import (
     datetime_auto_set,
     datetime_not_required_type,
     text_not_required_type,
     primary_key_type,
     datetime_auto_update,
-    text_required_type
+    text_required_type, MediaPatches
 )
 
 
@@ -41,3 +42,12 @@ class Users(OrmBase):
         back_populates="caller"
     )
     unread_messages: Mapped[list["UnreadMessages"]] = relationship()
+
+
+# async def delete_media_file(mapper, connection, target):
+#     if target.avatar_name:
+#         file_path = MediaPatches.USERS_AVATARS_FOLDER.value / target.avatar_name
+#         await FileManager().delete_file(file_path=file_path)
+#
+#
+# event.listen(Users, "after_delete", delete_media_file)

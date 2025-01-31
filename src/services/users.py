@@ -7,7 +7,7 @@ from repository import (
     fetch_user_from_db,
     fetch_users_from_db,
     delete_conversation_in_db,
-    delete_user_from_db
+    delete_user_from_db, get_conversation_messages_id
 )
 from validators import verify_user_is_existed, verify_users_is_existed
 from schemas import (
@@ -20,6 +20,7 @@ from schemas import (
     GetConversations,
     GetConversationsDB
 )
+from .messages import remove_media_messages
 from .conversations import leave_group
 from storage import FileManager
 from utilities import (
@@ -127,7 +128,7 @@ async def upload_user_avatar(user_id: int, avatar_data: Avatar) -> None:
     )
 
 
-async def fetch_user_avatar_path(user_id: int) -> Path:
+async def fetch_user_avatar_metadata(user_id: int) -> dict[str, any]:
     await verify_user_is_existed(user_id=user_id)
 
     user_obj = await fetch_private_user(user_id=user_id)
@@ -135,7 +136,10 @@ async def fetch_user_avatar_path(user_id: int) -> Path:
     if not await FileManager().file_exists(file_path=filepath):
         raise FileNotFound()
 
-    return filepath
+    return {
+        "file_path": filepath,
+        "file_type": user_obj.avatar_type
+    }
 
 
 async def fetch_users_avatars_paths(users_ids: list[int]) -> list[Path]:
@@ -179,6 +183,9 @@ async def remove_user_account(user_id: int) -> None:
     user_obj = await fetch_user_from_db(user_id=user_id)
     for conversation_obj in user_obj.conversations:
         if conversation_obj.type == ConversationTypes.PRIVATE:
+            messages_ids = await get_conversation_messages_id(conversation_id=conversation_obj.id)
+            await remove_media_messages(user_id=user_id, messages_ids=messages_ids)
+
             await delete_conversation_in_db(conversation_id=conversation_obj.id)
         else:
             await leave_group(user_id=user_id, group_id=conversation_obj.id)

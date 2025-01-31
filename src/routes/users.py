@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, status, UploadFile, File, Query, Body
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import StreamingResponse
 from fastapi_cache.decorator import cache
 from typing import Annotated
 
@@ -22,7 +22,7 @@ from services import (
     upload_user_avatar,
     fetch_users_avatars_paths,
     fetch_users_online_status,
-    fetch_user_avatar_path,
+    fetch_user_avatar_metadata,
     remove_user_avatar,
     search_users_by_nickname,
     fetch_user_conversations,
@@ -43,6 +43,7 @@ anonymous_users_router = APIRouter(
 
 
 @users_router.get("/me", status_code=status.HTTP_200_OK, response_model=PrivateUser)
+@cache(expire=600)
 async def get_current_user(
         current_user_id: Annotated[int, Depends(verify_token)]
 ):
@@ -51,6 +52,7 @@ async def get_current_user(
 
 
 @anonymous_users_router.get("", status_code=status.HTTP_200_OK, response_model=list[PublicUser])
+@cache(expire=600)
 async def get_users(
         user_id: UsersIds = Query()
 ):
@@ -59,6 +61,7 @@ async def get_users(
 
 
 @anonymous_users_router.get("/search", status_code=status.HTTP_200_OK, response_model=list[PublicUser])
+@cache(expire=600)
 async def search_users(
         search_query: str = Query(min_length=3, max_length=128),
         limit: int | None = Query(None, ge=1, le=1000),
@@ -71,8 +74,8 @@ async def search_users(
 async def get_user_avatar(
         user_id: int
 ):
-    filepath = await fetch_user_avatar_path(user_id=user_id)
-    return FileResponse(filepath)
+    metadata = await fetch_user_avatar_metadata(user_id=user_id)
+    return StreamingResponse(metadata["file_path"].open("rb"), media_type=metadata["file_type"])
 
 
 @anonymous_users_router.get("/avatars", status_code=status.HTTP_200_OK)
@@ -85,6 +88,7 @@ async def get_users_avatars(
 
 
 @users_router.get("/conversations", status_code=status.HTTP_200_OK, response_model=list[GetConversationsDB])
+@cache(expire=60)
 async def get_current_user_conversations(
         current_user_id: Annotated[int, Depends(verify_token)]
 ):
@@ -125,10 +129,10 @@ async def update_current_user(
 async def delete_current_user_avatar(
         current_user_id: Annotated[int, Depends(verify_token)]
 ):
-    filepath = await fetch_user_avatar_path(user_id=current_user_id)
+    metadata = await fetch_user_avatar_metadata(user_id=current_user_id)
     await remove_user_avatar(
         user_id=current_user_id,
-        avatar_path=filepath
+        avatar_path=metadata["file_path"]
     )
 
 
