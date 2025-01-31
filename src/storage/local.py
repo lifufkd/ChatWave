@@ -1,5 +1,6 @@
 from io import BytesIO
 from pathlib import Path
+from typing import Iterator
 
 from .base import BaseStorage
 from utilities import MessagesTypes, MediaPatches
@@ -30,8 +31,17 @@ class FileManager(BaseStorage):
     async def delete_file(self, file_path: Path) -> None:
         await StorageUtils.delete_file(file_path=file_path)
 
+    async def check_file_size(self, file_path: Path) -> int:
+        return await StorageUtils.check_file_size(file_path=file_path)
+
     async def archive_files(self, files_paths: list[Path]) -> BytesIO:
         return await StorageUtils().archive_files(files_paths=files_paths)
+
+    async def file_chunk_generator(self, file_paths: list[Path]):
+        return StorageUtils.file_chunk_generator(file_paths=file_paths)
+
+    async def range_file_chunk_generator(self, file_path: Path, start_byte: int, end_byte: int):
+        return StorageUtils.range_file_chunk_generator(file_path=file_path, start_byte=start_byte, end_byte=end_byte)
 
     async def validate_file(
             self,

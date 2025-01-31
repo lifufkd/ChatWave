@@ -1,6 +1,7 @@
+import asyncio
 import zipfile
 from PIL import Image
-from typing import Union, Literal, Iterable
+from typing import Union, Literal, Iterable, Iterator
 from pathlib import Path
 from io import BytesIO
 
@@ -33,6 +34,10 @@ class StorageUtils:
     async def file_exists(file_path: Path) -> bool:
         return file_path.exists() and file_path.is_file()
 
+    @staticmethod
+    async def check_file_size(file_path: Path) -> int:
+        return file_path.stat().st_size
+
     async def archive_files(self, files_paths: list[Path]) -> BytesIO:
         zip_buffer = BytesIO()
         with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
@@ -42,6 +47,19 @@ class StorageUtils:
 
         zip_buffer.seek(0)
         return zip_buffer
+
+    @staticmethod
+    async def file_chunk_generator(file_paths: list[Path]):
+        for file_path in file_paths:
+            with open(file_path, "rb") as f:
+                while chunk := f.read(generic_settings.CHUNK_SIZE):
+                    yield chunk
+
+    @staticmethod
+    async def range_file_chunk_generator(file_path: Path, start_byte: int, end_byte: int):
+        with open(file_path, "rb") as f:
+            f.seek(start_byte)
+            yield f.read(end_byte - start_byte + 1)
 
     @staticmethod
     async def calculate_file_size(file: bytes) -> float:
@@ -185,7 +203,7 @@ class StorageUtils:
         actual_file_type = await self.detect_file_type(file_type=file_type)
         if actual_file_type != file_type_filter:
             raise InvalidFileType(
-                file_type_name=file_type_filter,
+                file_type_name=file_type_filter.value,
                 file_types=', '.join(await self._get_allowed_types(file_type_filter))
             )
 
@@ -193,7 +211,7 @@ class StorageUtils:
         if not await self.validate_file_size(file_size=file_size_mb,
                                              max_allowed_file_size=await self._get_max_upload_size(file_type_filter)):
             raise FIleToBig(
-                file_type_name=file_type_filter,
+                file_type_name=file_type_filter.value,
                 size_limit=await self._get_max_upload_size(file_type_filter)
             )
 
