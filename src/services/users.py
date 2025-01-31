@@ -179,6 +179,11 @@ async def fetch_users_online_status(users_ids: list[int]) -> list[UserOnline] | 
     return users_objs
 
 
+async def delete_user_avatar(user_id: int):
+    file_path = await fetch_user_avatar_metadata(user_id=user_id)
+    await FileManager().delete_file(file_path=file_path["file_path"])
+
+
 async def remove_user_account(user_id: int) -> None:
     user_obj = await fetch_user_from_db(user_id=user_id)
     for conversation_obj in user_obj.conversations:
@@ -188,6 +193,7 @@ async def remove_user_account(user_id: int) -> None:
 
             await delete_conversation_in_db(conversation_id=conversation_obj.id)
         else:
-            await leave_group(user_id=user_id, group_id=conversation_obj.id)
+            await leave_group(user_id=user_id, group_id=conversation_obj.id, delete_messages=True)
 
+    await delete_user_avatar(user_id=user_id)
     await delete_user_from_db(user_id=user_id)
