@@ -28,11 +28,8 @@ class ConversationNotFoundError(Exception):
 
 
 class AccessDeniedError(Exception):
-    def __init__(self, conversation_id: int | None = None):
-        if conversation_id is None:
-            detail = "You does not have permission to access this conversation"
-        else:
-            detail = f"You does not have permission to access conversation with id ({conversation_id})"
+    def __init__(self):
+        detail = "You does not have permission to perform this operation"
         super().__init__(detail)
 
 
@@ -156,4 +153,10 @@ class MessageNotFound(Exception):
             detail = "Message not found"
         else:
             detail = f"Message with id ({message_id}) not found"
+        super().__init__(detail)
+
+
+class FileRangeError(Exception):
+    def __init__(self):
+        detail = "File range error"
         super().__init__(detail)
