@@ -85,6 +85,7 @@ class GenericSettings(BaseSettings):
     MAX_UPLOAD_VIDEO_SIZE: int = 8192
     MAX_UPLOAD_AUDIO_SIZE: int = 512
     MAX_UPLOAD_FILE_SIZE: int = 16384
+    CHUNK_SIZE: int = 16
     MAX_ITEMS_PER_REQUEST: int = 100
 
     class Config:
