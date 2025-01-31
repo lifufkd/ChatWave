@@ -5,7 +5,7 @@ from repository import (
     get_messages,
     get_conversation_member_role_from_db
 )
-from utilities import MessageNotFound, AccessDeniedError, ConversationTypes, ConversationMemberRoles
+from utilities import MessageNotFound, AccessDeniedError, ConversationTypes, ConversationMemberRoles, UserNotInConversation
 from validators import validate_user_in_conversation, validate_user_in_conversations
 
 
@@ -31,10 +31,10 @@ async def validate_user_is_message_owner(user_id: int, message_id: int) -> None:
     await message_is_existed(message_id=message_id)
 
     message_obj = await get_message(message_id=message_id)
+    await validate_user_in_conversation(user_id=user_id, conversation_id=message_obj.conversation_id)
+
     if message_obj.sender_id != user_id:
         raise AccessDeniedError()
-
-    await validate_user_in_conversation(user_id=user_id, conversation_id=message_obj.conversation_id)
 
 
 async def validate_user_have_access_to_message(user_id: int, message_id: int) -> None:
@@ -67,7 +67,7 @@ async def validate_user_can_manage_messages(user_id: int, messages_ids: list[int
         )
 
         if user_role is None:
-            raise AccessDeniedError()
+            raise UserNotInConversation(user_id=user_id, conversation_id=message_obj.conversation_id)
 
         if conversation_type == ConversationTypes.GROUP:
             if user_role == ConversationMemberRoles.MEMBER:

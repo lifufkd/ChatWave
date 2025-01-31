@@ -135,7 +135,7 @@ async def fetch_messages(sender_id: int, conversation_id: int, limit: int, offse
     return messages_objs
 
 
-async def fetch_message_media_path(sender_id: int, message_id: int) -> Path:
+async def fetch_message_media_metadata(sender_id: int, message_id: int) -> dict[str, any]:
     await validate_user_have_access_to_message(user_id=sender_id, message_id=message_id)
 
     message_obj = await get_message(message_id=message_id)
@@ -143,7 +143,10 @@ async def fetch_message_media_path(sender_id: int, message_id: int) -> Path:
     if not (await FileManager().file_exists(file_path=filepath)):
         raise FileNotFound()
 
-    return filepath
+    return {
+        "file_path": filepath,
+        "file_type": message_obj.file_content_type
+    }
 
 
 async def fetch_messages_media_paths(sender_id: int, messages_ids: list[int]) -> list[Path]:
@@ -169,7 +172,15 @@ async def fetch_messages_media_paths(sender_id: int, messages_ids: list[int]) ->
     return messages_paths
 
 
+async def remove_media_messages(user_id: int, messages_ids: list[int]):
+    file_manager_obj = FileManager()
+    medias_paths = await fetch_messages_media_paths(sender_id=user_id, messages_ids=messages_ids)
+    for media_path in medias_paths:
+        await file_manager_obj.delete_file(file_path=media_path)
+
+
 async def remove_messages(user_id: int, messages_ids: list[int]):
     await validate_user_can_manage_messages(user_id=user_id, messages_ids=messages_ids)
+    await remove_media_messages(user_id=user_id, messages_ids=messages_ids)
 
     await delete_messages(messages_ids=messages_ids)

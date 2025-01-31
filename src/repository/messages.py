@@ -100,6 +100,27 @@ async def get_messages(messages_ids: list[int]) -> list[Messages]:
         return result.scalars()
 
 
+async def get_conversation_messages_id(conversation_id: int) -> list[Messages.id]:
+    async with session() as cursor:
+        query = (
+            select(Messages.id)
+            .filter_by(conversation_id=conversation_id)
+        )
+        raw_data = await cursor.execute(query)
+        return raw_data.scalars().all()
+
+
+async def get_sender_conversation_messages_id(sender_id: int, conversation_id: int) -> list[Messages.id]:
+    async with session() as cursor:
+        query = (
+            select(Messages.id)
+            .filter_by(conversation_id=conversation_id)
+            .filter_by(sender_id=sender_id)
+        )
+        raw_data = await cursor.execute(query)
+        return raw_data.scalars().all()
+
+
 async def get_filtered_messages(conversation_id: int, limit: int, offset: int) -> list[Messages]:
     async with session() as cursor:
         query = (
@@ -120,12 +141,13 @@ async def get_filtered_messages(conversation_id: int, limit: int, offset: int) -
         return result
 
 
-async def search_messages(conversation_id: int, search_query: str) -> list[Messages]:
+async def search_messages(conversation_id: int, search_query: str, limit: int) -> list[Messages]:
     async with session() as cursor:
         query = (
             select(Messages)
             .filter_by(conversation_id=conversation_id)
             .filter(Messages.content.icontains(search_query))
+            .limit(limit)
         )
         result = await cursor.execute(query)
         return result.scalars().all()

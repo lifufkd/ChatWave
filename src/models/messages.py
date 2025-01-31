@@ -1,16 +1,16 @@
-from sqlalchemy import text, Index
-from sqlalchemy import ForeignKey
+from sqlalchemy import text, Index, event, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from datetime import datetime
 
 from database import OrmBase
+from storage import FileManager
 from utilities import (
     primary_key_type,
     MessagesStatus,
     text_not_required_type,
     MessagesTypes,
     datetime_auto_set,
-    datetime_auto_update
+    datetime_auto_update,
+    MediaPatches
 )
 
 
@@ -44,6 +44,15 @@ class Messages(OrmBase):
     __table_args = (
         Index("ix_messages_created_at_content", "created_at", "content"),
     )
+
+
+# async def delete_media_file(mapper, connection, target):
+#     if target.file_content_name:
+#         file_path = MediaPatches.MEDIA_MESSAGES_FOLDER.value / target.file_content_name
+#         await FileManager().delete_file(file_path=file_path)
+#
+#
+# event.listen(Messages, "before_delete", delete_media_file)
 
 
 
