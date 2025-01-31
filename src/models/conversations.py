@@ -1,13 +1,14 @@
-from sqlalchemy import ForeignKey, text, String
+from sqlalchemy import ForeignKey, text, String, event
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database import OrmBase
+from storage import FileManager
 from utilities import (
     text_not_required_type,
     datetime_auto_set,
     ConversationTypes,
     primary_key_type,
-    datetime_auto_update
+    datetime_auto_update, MediaPatches
 )
 
 
@@ -40,5 +41,14 @@ class Conversations(OrmBase):
         back_populates="conversation"
     )
     unread_messages: Mapped[list["UnreadMessages"]] = relationship()
+
+
+# async def delete_media_file(mapper, connection, target):
+#     if target.avatar_name:
+#         file_path = MediaPatches.GROUPS_AVATARS_FOLDER.value / target.avatar_name
+#         await FileManager().delete_file(file_path=file_path)
+#
+#
+# event.listen(Conversations, "after_delete", delete_media_file)
 
 

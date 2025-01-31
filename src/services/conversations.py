@@ -1,4 +1,6 @@
 from pathlib import Path
+
+from .messages import remove_media_messages
 from validators import (
     validate_user_in_conversation,
     validate_user_can_manage_conversation,
@@ -27,7 +29,8 @@ from repository import (
     get_conversation_admin_members_from_db,
     update_conversation_member_in_db,
     search_messages,
-    delete_conversation_messages
+    delete_conversation_messages, get_conversation_messages_id, fetch_conversation_type_from_db,
+    get_sender_conversation_messages_id
 )
 from storage import FileManager
 from utilities import (
@@ -162,7 +165,7 @@ async def upload_group_avatar(user_id: int, group_id: int, avatar_data: Avatar) 
     )
 
 
-async def fetch_group_avatar_path(user_id: int, group_id: int) -> Path:
+async def fetch_group_avatar_metadata(user_id: int, group_id: int) -> dict[str, any]:
     await validate_user_in_group(user_id=user_id, group_id=group_id)
 
     group_obj = await fetch_conversation_from_db(conversation_id=group_id)
@@ -170,7 +173,10 @@ async def fetch_group_avatar_path(user_id: int, group_id: int) -> Path:
     if not (await FileManager().file_exists(file_path=filepath)):
         raise FileNotFound()
 
-    return filepath
+    return {
+        "file_path": filepath,
+        "file_type": group_obj.avatar_type
+    }
 
 
 async def fetch_group_avatars_paths(user_id: int, conversations_ids: list[int]) -> list[Path]:
@@ -219,16 +225,32 @@ async def remove_group_members(user_id: int, group_id: int, members_data: list[D
     await delete_sender_messages(conversation_id=group_id, members_ids=members_ids_to_delete_messages)
 
 
+async def delete_group_avatar(group_id: int) -> None:
+    if not (await fetch_conversation_type_from_db(conversation_id=group_id)) == ConversationTypes.GROUP:
+        return None
+
+    group_obj = await fetch_conversation_from_db(conversation_id=group_id)
+    filepath = MediaPatches.GROUPS_AVATARS_FOLDER.value / f"{group_obj.avatar_name}"
+    if not (await FileManager().file_exists(file_path=filepath)):
+        return None
+
+    await FileManager().delete_file(file_path=filepath)
+
+
 async def delete_conversation_by_id(user_id: int, conversation_id: int) -> None:
     await validate_user_can_manage_conversation(user_id=user_id, conversation_id=conversation_id)
+
+    await delete_group_avatar(group_id=conversation_id)
+    messages_ids = await get_conversation_messages_id(conversation_id=conversation_id)
+    await remove_media_messages(user_id=user_id, messages_ids=messages_ids)
 
     await delete_conversation_in_db(conversation_id=conversation_id)
 
 
-async def search_conversation_messages(user_id: int, conversations_id: int, search_query: str) -> list[GetMessage]:
+async def search_conversation_messages(user_id: int, conversations_id: int, search_query: str, limit: int) -> list[GetMessage]:
     await validate_user_in_conversation(user_id=user_id, conversation_id=conversations_id)
 
-    raw_messages = await search_messages(conversation_id=conversations_id, search_query=search_query)
+    raw_messages = await search_messages(conversation_id=conversations_id, search_query=search_query, limit=limit)
     messages_objs = await many_sqlalchemy_to_pydantic(
         sqlalchemy_models=raw_messages,
         pydantic_model=GetMessage
@@ -250,6 +272,10 @@ async def leave_group(user_id: int, group_id: int, delete_messages: bool = False
 
     group_members_quantity = await get_conversation_members_quantity_in_db(conversation_id=group_id)
     if group_members_quantity == 1:
+        await delete_group_avatar(group_id=group_id)
+        messages_ids = await get_conversation_messages_id(conversation_id=group_id)
+        await remove_media_messages(user_id=user_id, messages_ids=messages_ids)
+
         await delete_conversation_in_db(conversation_id=group_id)
     else:
         user_group_role = await get_conversation_member_role_from_db(user_id=user_id, conversation_id=group_id)
@@ -264,13 +290,19 @@ async def leave_group(user_id: int, group_id: int, delete_messages: bool = False
                     role=ConversationMemberRoles.ADMIN
                 )
 
-        await delete_conversation_members_in_db(conversation_id=group_id, members_ids=[user_id])
-
         if delete_messages:
+            messages_ids = await get_sender_conversation_messages_id(sender_id=user_id, conversation_id=group_id)
+            await remove_media_messages(user_id=user_id, messages_ids=messages_ids)
+
             await delete_sender_messages(conversation_id=group_id, members_ids=[user_id])
+
+        await delete_conversation_members_in_db(conversation_id=group_id, members_ids=[user_id])
 
 
 async def delete_all_messages(user_id: int, conversation_id: int):
     await validate_user_in_chat(user_id=user_id, chat_id=conversation_id)
+
+    messages_ids = await get_conversation_messages_id(conversation_id=conversation_id)
+    await remove_media_messages(user_id=user_id, messages_ids=messages_ids)
 
     await delete_conversation_messages(conversation_id=conversation_id)

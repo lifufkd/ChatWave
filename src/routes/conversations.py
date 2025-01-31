@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, status, UploadFile, File, Query, Body
-from fastapi.responses import StreamingResponse, FileResponse
+from fastapi.responses import StreamingResponse
+from fastapi_cache.decorator import cache
 from typing import Annotated
 
 from dependencies import verify_token
@@ -9,7 +10,7 @@ from services import (
     create_group_conversation,
     edit_group_details,
     upload_group_avatar,
-    fetch_group_avatar_path,
+    fetch_group_avatar_metadata,
     fetch_group_avatars_paths,
     add_group_members,
     remove_group_avatar,
@@ -59,11 +60,13 @@ async def search_messages_in_conversation(
         current_user_id: Annotated[int, Depends(verify_token)],
         conversation_id: int,
         search_query: str = Query(min_length=3, max_length=128),
+        limit: int = Query(10, ge=1, le=1000)
 ):
     messages_objs = await search_conversation_messages(
         user_id=current_user_id,
         conversations_id=conversation_id,
-        search_query=search_query
+        search_query=search_query,
+        limit=limit
     )
     return messages_objs
 
@@ -73,8 +76,8 @@ async def get_group_avatar(
         current_user_id: Annotated[int, Depends(verify_token)],
         group_id: int
 ):
-    filepath = await fetch_group_avatar_path(user_id=current_user_id, group_id=group_id)
-    return FileResponse(filepath)
+    metadata = await fetch_group_avatar_metadata(user_id=current_user_id, group_id=group_id)
+    return StreamingResponse(metadata["file_path"].open("rb"), media_type=metadata["file_type"])
 
 
 @conversations_router.get("/avatars", status_code=status.HTTP_200_OK)
@@ -112,7 +115,7 @@ async def create_group(
 async def add_members_to_group(
         current_user_id: Annotated[int, Depends(verify_token)],
         group_id: int,
-        user_id: UsersIds = Body()
+        user_id: UsersIds = Query()
 ):
     await add_group_members(user_id=current_user_id, group_id=group_id, users_ids=user_id.users_ids)
 
@@ -145,11 +148,11 @@ async def delete_group_avatar(
         current_user_id: Annotated[int, Depends(verify_token)],
         group_id: int
 ):
-    filepath = await fetch_group_avatar_path(user_id=current_user_id, group_id=group_id)
+    metadata = await fetch_group_avatar_metadata(user_id=current_user_id, group_id=group_id)
     await remove_group_avatar(
         user_id=current_user_id,
         group_id=group_id,
-        avatar_path=filepath
+        avatar_path=metadata["file_path"]
     )
 
 

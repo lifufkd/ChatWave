@@ -129,8 +129,8 @@ async def validate_user_can_manage_conversation(user_id: int, conversation_id: i
     )
 
     if user_role is None:
-        raise AccessDeniedError(conversation_id=conversation_id)
+        raise UserNotInConversation(user_id=user_id, conversation_id=conversation_id)
 
     if conversation_type == ConversationTypes.GROUP:
         if user_role == ConversationMemberRoles.MEMBER:
-            raise AccessDeniedError(conversation_id=conversation_id)
+            raise AccessDeniedError()
