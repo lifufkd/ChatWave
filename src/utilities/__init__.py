@@ -33,7 +33,8 @@ from .exceptions_storage import (
     IsNotAChatError,
     UserAlreadyInConversation,
     MessageNotFound,
-    UserNotInConversation
+    UserNotInConversation,
+    FileRangeError
 )
 from .models_validators import validate_password, validate_nicknames, request_limit, ValidateModelNotEmpty
 

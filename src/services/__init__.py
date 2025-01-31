@@ -6,7 +6,7 @@ from .users import (
     upload_user_avatar,
     fetch_users_avatars_paths,
     fetch_users_online_status,
-    fetch_user_avatar_path,
+    fetch_user_avatar_metadata,
     remove_user_avatar,
     search_users_by_nickname,
     fetch_user_conversations,
@@ -17,7 +17,7 @@ from .conversations import (
     create_group_conversation,
     edit_group_details,
     upload_group_avatar,
-    fetch_group_avatar_path,
+    fetch_group_avatar_metadata,
     fetch_group_avatars_paths,
     remove_group_avatar,
     add_group_members,
@@ -32,7 +32,8 @@ from .messages import (
     create_media_message,
     update_user_message,
     fetch_messages,
-    fetch_message_media_path,
+    fetch_message_media_metadata,
     fetch_messages_media_paths,
-    remove_messages
+    remove_messages,
+    remove_media_messages
 )

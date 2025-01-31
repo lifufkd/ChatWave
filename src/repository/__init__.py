@@ -43,6 +43,8 @@ from .messages import (
     delete_conversation_messages,
     delete_messages,
     delete_sender_messages,
-    search_messages
+    search_messages,
+    get_conversation_messages_id,
+    get_sender_conversation_messages_id
 )
 
