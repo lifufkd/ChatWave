@@ -26,6 +26,18 @@ class RedisSettings(BaseSettings):
     REDIS_HOST: str
     REDIS_PORT: str
 
+    @property
+    def redis_url(self):
+        if self.REDIS_USER:
+            redis_user = self.REDIS_USER
+        else:
+            redis_user = ""
+        if self.REDIS_PASSWORD:
+            redis_password = self.REDIS_PASSWORD
+        else:
+            redis_password = ""
+        return f"redis://{redis_user}:{redis_password}@{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DATABASE}"
+
     class Config:
         env_file = ".env"
         extra = "allow"
