@@ -1,4 +1,5 @@
 from typing import Union, Literal
+from fastapi import WebSocketDisconnect
 
 from utilities import MessagesTypes
 
@@ -7,6 +8,9 @@ class InvalidCredentials(Exception):
     def __init__(self):
         detail = "Could not validate credentials"
         super().__init__(detail)
+
+
+web_socket_invalid_data = WebSocketDisconnect(code=1000, reason="Invalid data type received")
 
 
 class UserNotFoundError(Exception):
