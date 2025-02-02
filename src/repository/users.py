@@ -117,14 +117,19 @@ async def delete_user_avatar_in_db(user_id: int) -> None:
         await cursor.commit()
 
 
-async def update_user_last_online_in_db(user_id: int) -> None:
+async def update_users_last_online(users: list[dict]) -> None:
     async with session() as cursor:
-        query = (
-            update(Users)
-            .filter_by(id=user_id)
-            .values(last_online=text("TIMEZONE('utc', now())"), updated_at=text("updated_at"))
-        )
-        await cursor.execute(query)
+        for user in users:
+            query = (
+                update(Users)
+                .filter_by(id=user["user_id"])
+                .values(
+                    last_online=user["last_online"],
+                    updated_at=text("updated_at")
+                )
+            )
+            await cursor.execute(query)
+
         await cursor.commit()
 
 

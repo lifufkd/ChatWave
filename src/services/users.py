@@ -1,4 +1,6 @@
 from pathlib import Path
+from datetime import datetime
+from dependencies import redis_client
 from repository import (
     update_user_in_db,
     search_users_in_db,
@@ -165,16 +167,30 @@ async def remove_user_avatar(user_id: int, avatar_path: Path) -> None:
 
 
 async def fetch_users_online_status(users_ids: list[int]) -> list[UserOnline] | list:
-    await verify_users_is_existed(users_ids=users_ids)
-
-    raw_data = await get_users_last_online_from_db(users_ids=users_ids)
     users_objs = list()
-    for item in raw_data:
-        transformed_data = {
-            "user_id": item[0],
-            "last_online": item[1]
-        }
-        users_objs.append(UserOnline.model_validate(transformed_data))
+    not_founded_users_ids = list()
+
+    for user_id in users_ids:
+        user_last_online = await redis_client.get(f"user:last_online:{user_id}")
+        if user_last_online:
+            users_objs.append(
+                UserOnline(
+                    user_id=user_id,
+                    last_online=user_last_online
+                )
+            )
+        else:
+            not_founded_users_ids.append(user_id)
+
+    if not_founded_users_ids:
+        raw_users_data = await get_users_last_online_from_db(users_ids=not_founded_users_ids)
+
+        for raw_user_data in raw_users_data:
+            transformed_data = {
+                "user_id": raw_user_data[0],
+                "last_online": raw_user_data[1]
+            }
+            users_objs.append(UserOnline.model_validate(transformed_data))
 
     return users_objs
 
