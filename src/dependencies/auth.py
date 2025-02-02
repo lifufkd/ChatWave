@@ -15,5 +15,3 @@ async def verify_token(token: Annotated[str, Depends(oauth2_scheme)]) -> int:
         raise InvalidCredentials()
 
     return user_id
-
-
