@@ -7,7 +7,7 @@ from .users import (
     update_user_in_db,
     search_users_in_db,
     get_users_last_online_from_db,
-    update_user_last_online_in_db,
+    update_users_last_online,
     is_user_exists,
     delete_user_avatar_in_db,
     delete_user_from_db

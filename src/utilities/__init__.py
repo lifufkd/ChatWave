@@ -34,7 +34,8 @@ from .exceptions_storage import (
     UserAlreadyInConversation,
     MessageNotFound,
     UserNotInConversation,
-    FileRangeError
+    FileRangeError,
+    web_socket_invalid_data
 )
 from .models_validators import validate_password, validate_nicknames, request_limit, ValidateModelNotEmpty
 
