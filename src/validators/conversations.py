@@ -107,6 +107,16 @@ async def validate_user_in_conversation(user_id: int, conversation_id: int) -> N
         raise UserNotInConversation(user_id=user_id, conversation_id=conversation_id)
 
 
+async def validate_users_in_conversation(users_ids: list[int], conversation_id: int) -> None:
+    await conversation_is_existed(conversation_id=conversation_id)
+
+    for user_id in users_ids:
+        current_user_obj = await fetch_user_from_db(user_id=user_id)
+        current_user_conversations_ids = await get_conversations_ids_from_user_obj(current_user_obj)
+        if conversation_id not in current_user_conversations_ids:
+            raise UserNotInConversation(user_id=user_id, conversation_id=conversation_id)
+
+
 async def validate_user_in_conversations(user_id: int, conversations_ids: list[int]) -> None:
     current_user_obj = await fetch_user_from_db(user_id=user_id)
     current_user_conversations_ids = await get_conversations_ids_from_user_obj(current_user_obj)
