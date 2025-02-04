@@ -3,7 +3,7 @@ from sqlalchemy.orm import selectinload
 
 from models import UnreadMessages
 from database import session
-from schemas import GetUnreadMessages, FilterUnreadMessages
+from schemas import FilterUnreadMessages
 from schemas.unread_messages import UnreadMessageExistedDTO, AddUnreadMessagesDB
 
 
@@ -43,4 +43,14 @@ async def insert_unread_messages(unread_messages_data: AddUnreadMessagesDB) -> N
             )
             await cursor.execute(query)
 
+        await cursor.commit()
+
+
+async def delete_unread_messages(filter_conditions: FilterUnreadMessages) -> None:
+    async with session() as cursor:
+        query = (
+            delete(UnreadMessages)
+            .filter_by(**filter_conditions.model_dump(exclude_none=True))
+        )
+        await cursor.execute(query)
         await cursor.commit()
