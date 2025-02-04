@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status, UploadFile, File, Query, Body, Form, Path
+from fastapi import APIRouter, Depends, status, UploadFile, File, Query, Body, Form
 from fastapi.responses import StreamingResponse
 from typing import Annotated, Optional
 
