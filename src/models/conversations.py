@@ -1,14 +1,13 @@
-from sqlalchemy import ForeignKey, text, String, event
+from sqlalchemy import ForeignKey, text, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database import OrmBase
-from storage import FileManager
 from utilities import (
     text_not_required_type,
     datetime_auto_set,
     ConversationTypes,
     primary_key_type,
-    datetime_auto_update, MediaPatches
+    datetime_auto_update
 )
 
 
@@ -19,7 +18,7 @@ class Conversations(OrmBase):
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True
     )
-    type: Mapped[ConversationTypes] = mapped_column()
+    type: Mapped[ConversationTypes] = mapped_column(nullable=False)
     name: Mapped[str] = mapped_column(String(64), nullable=True)
     description: Mapped[text_not_required_type]
     avatar_name: Mapped[text_not_required_type]

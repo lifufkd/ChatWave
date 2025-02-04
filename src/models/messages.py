@@ -1,16 +1,14 @@
-from sqlalchemy import text, Index, event, ForeignKey
+from sqlalchemy import text, Index, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database import OrmBase
-from storage import FileManager
 from utilities import (
     primary_key_type,
     MessagesStatus,
     text_not_required_type,
     MessagesTypes,
     datetime_auto_set,
-    datetime_auto_update,
-    MediaPatches
+    datetime_auto_update
 )
 
 
