@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import select, insert, update, text, delete, func
+from sqlalchemy import select, insert, update, text, delete
 from sqlalchemy.orm import selectinload
 
 from models import Users, Conversations
@@ -47,6 +47,7 @@ async def fetch_user_from_db(user_id: int) -> Users:
         query = (
             select(Users)
             .options(selectinload(Users.conversations).selectinload(Conversations.members))
+            .options(selectinload(Users.unread_messages))
             .filter_by(id=user_id)
         )
         raw_data = await cursor.execute(query)
