@@ -8,13 +8,10 @@ from fastapi import (
     Query,
     Body,
     WebSocket,
-    WebSocketDisconnect,
-    BackgroundTasks
+    WebSocketDisconnect
 )
 from fastapi.responses import StreamingResponse
-from fastapi_cache.decorator import cache
 from typing import Annotated
-
 from schemas import (
     PrivateUser,
     UpdateUser,
@@ -22,7 +19,7 @@ from schemas import (
     Avatar,
     UsersIds,
     UserOnline,
-    GetConversationsDB
+    GetConversationsDB, GetUnreadMessages
 )
 from dependencies import verify_token
 from storage import FileManager
@@ -40,7 +37,7 @@ from services import (
     search_users_by_nickname,
     fetch_user_conversations,
     remove_user_account,
-    leave_group
+    leave_group, fetch_user_unread_messages
 )
 
 users_router = APIRouter(
@@ -159,6 +156,14 @@ async def get_users_last_online_ws(websocket: WebSocket):
             await task
         except asyncio.CancelledError:
             pass
+
+
+@users_router.get("/messages/unread", status_code=status.HTTP_200_OK, response_model=list[GetUnreadMessages])
+async def get_current_user_unread_messages(
+        current_user_id: Annotated[int, Depends(verify_token)]
+):
+    unread_messages_objs = await fetch_user_unread_messages(user_id=current_user_id)
+    return unread_messages_objs
 
 
 @users_router.put("/me/avatar", status_code=status.HTTP_204_NO_CONTENT)
