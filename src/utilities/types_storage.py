@@ -18,25 +18,25 @@ text_not_required_type = Annotated[str, mapped_column(nullable=True)]
 primary_key_type = Annotated[int, mapped_column(primary_key=True)]
 
 
-class ConversationMemberRoles(Enum):
+class ConversationMemberRoles(str, Enum):
     CREATOR = 'creator'
     ADMIN = "admin"
     MEMBER = "member"
 
 
-class ConversationTypes(Enum):
+class ConversationTypes(str, Enum):
     PRIVATE = 'private'
     GROUP = 'group'
 
 
-class MessagesStatus(Enum):
+class MessagesStatus(str, Enum):
     CREATED = 'created'
     SENT = 'sent'
     DELIVERED = 'delivered'
     READ = 'read'
 
 
-class MessagesTypes(Enum):
+class MessagesTypes(str, Enum):
     TEXT = 'text'
     IMAGE = 'image'
     VIDEO = 'video'
@@ -45,7 +45,12 @@ class MessagesTypes(Enum):
     VOICE = 'voice'
 
 
-class CallsStatus(Enum):
+class EntitiesTypes(Enum):
+    MESSAGES = 'message'
+    CALLS = 'call'
+
+
+class CallsStatus(str, Enum):
     PENDING = 'pending'
     COMING = 'coming'
     COMPLETED = 'completed'
