@@ -1,5 +1,4 @@
 from pathlib import Path
-from datetime import datetime
 from dependencies import redis_client
 from repository import (
     update_user_in_db,
@@ -9,7 +8,8 @@ from repository import (
     fetch_user_from_db,
     fetch_users_from_db,
     delete_conversation_in_db,
-    delete_user_from_db, get_conversation_messages_id
+    delete_user_from_db,
+    get_conversation_messages_id
 )
 from validators import verify_user_is_existed, verify_users_is_existed
 from schemas import (
@@ -20,9 +20,10 @@ from schemas import (
     UserOnline,
     Avatar,
     GetConversations,
-    GetConversationsDB
+    GetConversationsDB,
+    GetUnreadMessages
 )
-from .messages import remove_media_messages
+from .messages import remove_media_messages, mark_message_delivered
 from .conversations import leave_group
 from storage import FileManager
 from utilities import (
@@ -159,6 +160,17 @@ async def fetch_users_avatars_paths(users_ids: list[int]) -> list[Path]:
         raise FileNotFound()
 
     return avatars_paths
+
+
+async def fetch_user_unread_messages(user_id: int) -> list[GetUnreadMessages]:
+    raw_user_data = await fetch_user_from_db(user_id=user_id)
+    unread_messages_objs = await many_sqlalchemy_to_pydantic(
+        sqlalchemy_models=raw_user_data.unread_messages,
+        pydantic_model=GetUnreadMessages
+    )
+    for unread_message_obj in unread_messages_objs:
+        await mark_message_delivered(message_id=unread_message_obj.message_id)
+    return unread_messages_objs
 
 
 async def remove_user_avatar(user_id: int, avatar_path: Path) -> None:
