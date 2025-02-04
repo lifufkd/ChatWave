@@ -33,7 +33,8 @@ from utilities import (
     UserAlreadyInConversation,
     MessageNotFound,
     UserNotInConversation,
-    FileRangeError
+    FileRangeError,
+    UnreadMessageAlreadyExists
 )
 
 
@@ -152,6 +153,11 @@ async def exception_handler(request, exc: Exception) -> JSONResponse:
         case FileRangeError():
             return JSONResponse(
                 status_code=status.HTTP_416_REQUESTED_RANGE_NOT_SATISFIABLE,
+                content={"detail": str(exc)}
+            )
+        case UnreadMessageAlreadyExists():
+            return JSONResponse(
+                status_code=status.HTTP_409_CONFLICT,
                 content={"detail": str(exc)}
             )
 
