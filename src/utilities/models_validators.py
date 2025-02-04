@@ -32,6 +32,15 @@ def request_limit(values: list[any]) -> list[any]:
     return values
 
 
+def check_exclusive_fields(values):
+    message_id, call_id = values.get("message_id"), values.get("call_id")
+    if message_id is None and call_id is None:
+        raise ValueError("Either 'message_id' or 'call_id' must be provided")
+    if message_id is not None and call_id is not None:
+        raise ValueError("Only one of 'message_id' or 'call_id' must be provided")
+    return values
+
+
 class ValidateModelNotEmpty(BaseModel):
     @model_validator(mode="before")
     def validate_not_empty(cls, values: dict[str, any]) -> dict[str, any]:
