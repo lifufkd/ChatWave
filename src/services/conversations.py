@@ -28,8 +28,9 @@ from repository import (
     get_conversation_members_in_db,
     get_conversation_admin_members_from_db,
     update_conversation_member_in_db,
-    search_messages,
-    delete_conversation_messages, get_conversation_messages_id, fetch_conversation_type_from_db,
+    delete_conversation_messages,
+    get_conversation_messages_id,
+    fetch_conversation_type_from_db,
     get_sender_conversation_messages_id
 )
 from storage import FileManager
@@ -42,7 +43,6 @@ from utilities import (
     UserAlreadyInConversation,
     MessagesTypes,
     sqlalchemy_to_pydantic,
-    many_sqlalchemy_to_pydantic,
     MediaPatches
 )
 from schemas import (
@@ -50,7 +50,6 @@ from schemas import (
     EditConversation,
     EditConversationDB,
     DeleteGroupMembers,
-    GetMessage,
     CreateEmptyConversation,
     GetConversations,
     Avatar,
@@ -245,18 +244,6 @@ async def delete_conversation_by_id(user_id: int, conversation_id: int) -> None:
     await remove_media_messages(user_id=user_id, messages_ids=messages_ids)
 
     await delete_conversation_in_db(conversation_id=conversation_id)
-
-
-async def search_conversation_messages(user_id: int, conversations_id: int, search_query: str, limit: int) -> list[GetMessage]:
-    await validate_user_in_conversation(user_id=user_id, conversation_id=conversations_id)
-
-    raw_messages = await search_messages(conversation_id=conversations_id, search_query=search_query, limit=limit)
-    messages_objs = await many_sqlalchemy_to_pydantic(
-        sqlalchemy_models=raw_messages,
-        pydantic_model=GetMessage
-    )
-
-    return messages_objs
 
 
 async def leave_group(user_id: int, group_id: int, delete_messages: bool = False) -> None:
