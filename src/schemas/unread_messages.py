@@ -13,8 +13,8 @@ class UnreadMessageBase(BaseModel):
 
 class GetUnreadMessages(UnreadMessageBase):
     id: int
-    message_id: int
-    call_id: int
+    message_id: Optional[int]
+    call_id: Optional[int]
 
 
 class UnreadMessageExistedDTO(UnreadMessageBase):
