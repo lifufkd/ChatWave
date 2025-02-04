@@ -14,13 +14,13 @@ from repository import (
     get_filtered_messages,
     get_message,
     get_messages,
-    delete_messages
+    delete_messages, get_message_status, update_message_status, search_messages, delete_unread_messages
 )
 from schemas import (
     CreateTextMessageDB,
     CreateMediaMessage,
     CreateMediaMessageDB,
-    GetMessage
+    GetMessage, FilterUnreadMessages
 )
 from storage import FileManager
 from utilities import (
@@ -119,6 +119,22 @@ async def update_user_message(sender_id: int, message_id: int, content: str):
     )
 
 
+async def mark_message_delivered(message_id: int):
+    if (await get_message_status(message_id=message_id)) == MessagesStatus.SENT:
+        await update_message_status(message_id=message_id, status=MessagesStatus.DELIVERED)
+
+
+async def mark_message_read(user_id: int, message_id: int):
+    if (await get_message_status(message_id=message_id)) != MessagesStatus.READ:
+        await update_message_status(message_id=message_id, status=MessagesStatus.READ)
+        await delete_unread_messages(
+            filter_conditions=FilterUnreadMessages(
+                user_id=user_id,
+                message_id=message_id
+            )
+        )
+
+
 async def fetch_messages(sender_id: int, conversation_id: int, limit: int, offset: int) -> list[GetMessage]:
     await validate_user_in_conversation(user_id=sender_id, conversation_id=conversation_id)
 
@@ -131,6 +147,26 @@ async def fetch_messages(sender_id: int, conversation_id: int, limit: int, offse
         sqlalchemy_models=raw_messages,
         pydantic_model=GetMessage
     )
+    for messages_obj in messages_objs:
+        if messages_obj.sender_id == sender_id:
+            continue
+        await mark_message_read(user_id=sender_id, message_id=messages_obj.id)
+
+    return messages_objs
+
+
+async def search_conversation_messages(user_id: int, conversations_id: int, search_query: str, limit: int) -> list[GetMessage]:
+    await validate_user_in_conversation(user_id=user_id, conversation_id=conversations_id)
+
+    raw_messages = await search_messages(conversation_id=conversations_id, search_query=search_query, limit=limit)
+    messages_objs = await many_sqlalchemy_to_pydantic(
+        sqlalchemy_models=raw_messages,
+        pydantic_model=GetMessage
+    )
+    for messages_obj in messages_objs:
+        if messages_obj.sender_id == user_id:
+            continue
+        await mark_message_read(user_id=user_id, message_id=messages_obj.id)
 
     return messages_objs
 
