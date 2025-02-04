@@ -164,3 +164,12 @@ class FileRangeError(Exception):
     def __init__(self):
         detail = "File range error"
         super().__init__(detail)
+
+
+class UnreadMessageAlreadyExists(Exception):
+    def __init__(self, user_id: int | None = None):
+        if user_id is None:
+            detail = "Unread message already exists"
+        else:
+            detail = f"Unread message already exists for user with id ({user_id})"
+        super().__init__(detail)
