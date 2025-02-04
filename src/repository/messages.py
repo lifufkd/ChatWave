@@ -1,4 +1,4 @@
-from sqlalchemy import select, update, insert, and_, func, delete
+from sqlalchemy import select, update, insert, and_, func, delete, text
 from sqlalchemy.orm import selectinload
 
 from models import Messages
@@ -18,6 +18,20 @@ async def is_message_exists(message_id: int) -> bool:
             return True
 
         return False
+
+
+async def update_message_status(message_id: int, status: MessagesStatus) -> None:
+    async with session() as cursor:
+        query = (
+            update(Messages)
+            .filter_by(id=message_id)
+            .values(
+                status=status,
+                updated_at=text("updated_at"),
+            )
+        )
+        await cursor.execute(query)
+        await cursor.commit()
 
 
 async def insert_empty_message(sender_id: int, conversation_id: int) -> int:
@@ -108,6 +122,16 @@ async def get_conversation_messages_id(conversation_id: int) -> list[Messages.id
         )
         raw_data = await cursor.execute(query)
         return raw_data.scalars().all()
+
+
+async def get_message_status(message_id: int) -> MessagesStatus:
+    async with session() as cursor:
+        query = (
+            select(Messages.status)
+            .filter_by(id=message_id)
+        )
+        raw_data = await cursor.execute(query)
+        return raw_data.scalar()
 
 
 async def get_sender_conversation_messages_id(sender_id: int, conversation_id: int) -> list[Messages.id]:
