@@ -10,7 +10,8 @@ from .users import (
     remove_user_avatar,
     search_users_by_nickname,
     fetch_user_conversations,
-    remove_user_account
+    remove_user_account,
+    fetch_user_unread_messages
 )
 from .conversations import (
     create_private_conversation,
@@ -24,7 +25,6 @@ from .conversations import (
     remove_group_members,
     delete_conversation_by_id,
     leave_group,
-    search_conversation_messages,
     delete_all_messages
 )
 from .messages import (
@@ -35,6 +35,8 @@ from .messages import (
     fetch_message_media_metadata,
     fetch_messages_media_paths,
     remove_messages,
-    remove_media_messages
+    remove_media_messages,
+    search_conversation_messages,
+    mark_message_delivered
 )
 from .unread_messages import add_unread_messages
