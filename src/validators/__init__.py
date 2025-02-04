@@ -8,6 +8,7 @@ from .conversations import (
     validate_user_in_groups,
     validate_users_in_same_chat,
     conversation_is_group,
+    validate_users_in_conversation
 )
 from .messages import (
     validate_user_is_message_owner,
@@ -21,3 +22,4 @@ from .users import (
     verify_user_is_existed,
     verify_users_is_existed
 )
+from .unread_messages import validate_unread_message_doesnt_exist

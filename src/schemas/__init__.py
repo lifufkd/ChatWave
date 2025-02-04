@@ -28,3 +28,9 @@ from .messages import (
     GetMessage,
     MessagesIds
 )
+from .unread_messages import (
+    GetUnreadMessages,
+    FilterUnreadMessages,
+    UnreadMessageExistedDTO,
+    AddUnreadMessagesDB
+)
