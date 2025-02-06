@@ -103,6 +103,16 @@ async def fetch_user_conversations(user_id: int) -> list[GetConversationsDB]:
     return result
 
 
+async def fetch_user_conversations_ids(user_id: int) -> list[int]:
+    result = list()
+
+    raw_user = await fetch_user_from_db(user_id=user_id)
+    for conversation_obj in raw_user.conversations:
+        result.append(conversation_obj.id)
+
+    return result
+
+
 async def update_user_profile(user_id: int, profile_data: UpdateUser) -> None:
     update_user_obj = UpdateUserDB(**profile_data.model_dump())
     if profile_data.password is not None:
@@ -227,7 +237,45 @@ async def remove_user_account(user_id: int) -> None:
     await delete_user_from_db(user_id=user_id)
 
 
-async def update_user_last_online_listener(current_user_id: int, websocket: WebSocket) -> None:
+async def unread_messages_listener(current_user_id: int, websocket: WebSocket) -> None:
+    async def send_user_unread_messages():
+        result = list()
+        for unread_message_obj in unread_messages_objs:
+            result.append(
+                {
+                    **unread_message_obj.model_dump()
+                }
+            )
+        for unread_message_obj in unread_messages_objs:
+            await mark_message_delivered(message_id=unread_message_obj.message_id)
+        await websocket.send_json(result)
+
+    pubsub = redis_client.pubsub()
+    await pubsub.subscribe("user:unread_messages_events")
+
+    unread_messages_objs = await fetch_user_unread_messages(user_id=current_user_id)
+    await send_user_unread_messages()
+
+    try:
+        async for message in pubsub.listen():
+            if message["type"] != "message":
+                continue
+
+            payload = message["data"].decode()
+            event_id = int(payload)
+            if event_id != current_user_id:
+                continue
+
+            unread_messages_objs = await fetch_user_unread_messages(user_id=current_user_id)
+
+            await send_user_unread_messages()
+    except:
+        pass
+    finally:
+        await pubsub.unsubscribe("user:unread_messages")
+
+
+async def user_last_online_listener(current_user_id: int, websocket: WebSocket) -> None:
     async def send_recipients_last_online():
         result = list()
         for user_online_obj in recipients_last_online_objs:
@@ -243,6 +291,7 @@ async def update_user_last_online_listener(current_user_id: int, websocket: WebS
     pubsub = redis_client.pubsub()
     await pubsub.subscribe("user:last_online_events", "user:recipients_change_events")
 
+    user_conversations_ids = await fetch_user_conversations_ids(user_id=current_user_id)
     user_recipients_ids = await fetch_user_recipients_last_online(user_id=current_user_id)
     recipients_last_online_objs = await fetch_users_online_status(users_ids=user_recipients_ids)
     await send_recipients_last_online()
@@ -256,10 +305,11 @@ async def update_user_last_online_listener(current_user_id: int, websocket: WebS
 
             match channel:
                 case "user:recipients_change_events":
-                    event_user_id = int(payload)
-                    if event_user_id != current_user_id:
+                    event_conversation_id = int(payload)
+                    if event_conversation_id not in user_conversations_ids:
                         continue
 
+                    temp_user_conversations_ids = await fetch_user_conversations_ids(user_id=current_user_id)
                     temp_user_recipients_ids = await fetch_user_recipients_last_online(user_id=current_user_id)
                     new_recipients_ids = list(set(temp_user_recipients_ids)-set(user_recipients_ids))
                     deleted_recipients_ids = list(set(user_recipients_ids)-set(temp_user_recipients_ids))
@@ -273,6 +323,7 @@ async def update_user_last_online_listener(current_user_id: int, websocket: WebS
                                 continue
                             recipients_last_online_objs.remove(recipient_last_online_obj)
 
+                    user_conversations_ids = temp_user_conversations_ids.copy()
                     user_recipients_ids = temp_user_recipients_ids.copy()
                     await send_recipients_last_online()
 
