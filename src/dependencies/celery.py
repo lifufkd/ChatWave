@@ -15,11 +15,3 @@ celery_client.conf.update(
     result_serializer="json",
     timezone="UTC",
 )
-
-
-celery_client.conf.beat_schedule = {
-    "run-every-hour": {
-        "task": "tasks.tasks.sync_users_last_online",
-        "schedule": crontab(minute="0", hour="*"),
-    },
-}
