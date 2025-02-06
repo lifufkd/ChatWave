@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 from fastapi import WebSocket
 
@@ -313,8 +314,10 @@ async def user_last_online_listener(current_user_id: int, websocket: WebSocket) 
 
             match channel:
                 case "user:recipients_change_events":
-                    event_conversation_id = int(payload)
-                    if event_conversation_id not in user_conversations_ids:
+                    event_data = json.loads(payload)
+                    event_user_id = int(event_data.get("user_id"))
+                    event_conversation_id = int(event_data.get("conversation_id"))
+                    if event_conversation_id not in user_conversations_ids or event_user_id != current_user_id:
                         continue
 
                     temp_user_conversations_ids = await fetch_user_conversations_ids(user_id=current_user_id)
