@@ -33,6 +33,7 @@ class PublicUser(BaseModel):
     nickname: Annotated[str, Field(min_length=3, max_length=128)]
     birthday: Optional[date]
     bio: Optional[str]
+    last_online: Optional[datetime]
     created_at: datetime
 
 

@@ -12,6 +12,8 @@ from fastapi import (
 )
 from fastapi.responses import StreamingResponse
 from typing import Annotated
+
+from repository import is_user_exists
 from schemas import (
     PrivateUser,
     UpdateUser,
@@ -21,23 +23,24 @@ from schemas import (
     UserOnline,
     GetConversationsDB, GetUnreadMessages
 )
-from dependencies import verify_token
+from dependencies import verify_token, update_user_last_online, verify_token_ws
 from storage import FileManager
-from utilities import UserNotFoundError, web_socket_invalid_data
-from validators import update_user_last_online, verify_current_user_is_existed
+from validators import verify_current_user_is_existed
 from services import (
     fetch_private_user,
     update_user_profile,
     fetch_public_users,
     upload_user_avatar,
     fetch_users_avatars_paths,
-    fetch_users_online_status,
     fetch_user_avatar_metadata,
     remove_user_avatar,
     search_users_by_nickname,
     fetch_user_conversations,
     remove_user_account,
-    leave_group, fetch_user_unread_messages
+    leave_group,
+    fetch_user_unread_messages,
+    fetch_user_recipients_last_online,
+    fetch_users_online_status, update_user_last_online_listener
 )
 
 users_router = APIRouter(
@@ -102,60 +105,28 @@ async def get_current_user_conversations(
     return conversations_objs
 
 
-@anonymous_users_router.get("/online", status_code=status.HTTP_200_OK, response_model=list[UserOnline])
+@users_router.get("/online", status_code=status.HTTP_200_OK, response_model=list[UserOnline])
 async def get_users_last_online_rest(
-        user_id: UsersIds = Query()
+        current_user_id: Annotated[int, Depends(verify_token)]
 ):
-    users_last_online = await fetch_users_online_status(users_ids=user_id.users_ids)
+    recipients_ids = await fetch_user_recipients_last_online(user_id=current_user_id)
+    users_last_online = await fetch_users_online_status(users_ids=recipients_ids)
     return users_last_online
 
 
 @anonymous_users_router.websocket("/ws/online")
-async def get_users_last_online_ws(websocket: WebSocket):
-    copy_users_ids = list()
-
-    async def send_status_periodically():
-        while True:
-            if not copy_users_ids:
-                await asyncio.sleep(5)
-                continue
-
-            result = list()
-            users_online_status_objs = await fetch_users_online_status(users_ids=copy_users_ids)
-            for user_online_obj in users_online_status_objs:
-                result.append(
-                    {
-                        "user_id": user_online_obj.user_id,
-                        "last_online": user_online_obj.last_online.strftime("%Y-%m-%d %H:%M:%S")
-                    }
-                )
-
-            await websocket.send_json(result)
-            await asyncio.sleep(5)
-
+async def get_users_last_online_ws(websocket: WebSocket, current_user_id: Annotated[str, Depends(verify_token_ws)]):
     await websocket.accept()
-    task = asyncio.create_task(send_status_periodically())
+    if current_user_id is None:
+        await websocket.close(code=1008)
+    elif not (await is_user_exists(user_id=current_user_id)):
+        await websocket.close(code=1008)
 
     try:
-        while True:
-            users_ids = await websocket.receive_json()
-            if not isinstance(users_ids, list):
-                raise web_socket_invalid_data
-            if users_ids != copy_users_ids:
-                try:
-                    copy_users_ids = [int(user_id) for user_id in users_ids.copy()]
-                except ValueError:
-                    raise web_socket_invalid_data
-    except WebSocketDisconnect:
+        task = asyncio.create_task(update_user_last_online_listener(current_user_id, websocket))
+        await task
+    except:
         pass
-    finally:
-        if not task:
-            return
-        task.cancel()
-        try:
-            await task
-        except asyncio.CancelledError:
-            pass
 
 
 @users_router.get("/messages/unread", status_code=status.HTTP_200_OK, response_model=list[GetUnreadMessages])

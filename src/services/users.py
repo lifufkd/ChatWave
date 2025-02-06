@@ -1,4 +1,6 @@
 from pathlib import Path
+from fastapi import WebSocket
+
 from dependencies import redis_client
 from repository import (
     update_user_in_db,
@@ -178,31 +180,29 @@ async def remove_user_avatar(user_id: int, avatar_path: Path) -> None:
     await delete_user_avatar_in_db(user_id=user_id)
 
 
-async def fetch_users_online_status(users_ids: list[int]) -> list[UserOnline] | list:
+async def fetch_user_recipients_last_online(user_id: int) -> list[int]:
+    users_ids = list()
+
+    raw_user = await fetch_user_from_db(user_id=user_id)
+    for conversation_obj in raw_user.conversations:
+        for member in conversation_obj.members:
+            if member.id == user_id:
+                continue
+            users_ids.append(member.id)
+
+    return list(set(users_ids))
+
+
+async def fetch_users_online_status(users_ids: list[int]) -> list[UserOnline]:
     users_objs = list()
-    not_founded_users_ids = list()
+    raw_users_data = await get_users_last_online_from_db(users_ids=users_ids)
 
-    for user_id in users_ids:
-        user_last_online = await redis_client.get(f"user:last_online:{user_id}")
-        if user_last_online:
-            users_objs.append(
-                UserOnline(
-                    user_id=user_id,
-                    last_online=user_last_online
-                )
-            )
-        else:
-            not_founded_users_ids.append(user_id)
-
-    if not_founded_users_ids:
-        raw_users_data = await get_users_last_online_from_db(users_ids=not_founded_users_ids)
-
-        for raw_user_data in raw_users_data:
-            transformed_data = {
-                "user_id": raw_user_data[0],
-                "last_online": raw_user_data[1]
-            }
-            users_objs.append(UserOnline.model_validate(transformed_data))
+    for raw_user_data in raw_users_data:
+        transformed_data = {
+            "user_id": raw_user_data[0],
+            "last_online": raw_user_data[1]
+        }
+        users_objs.append(UserOnline.model_validate(transformed_data))
 
     return users_objs
 
@@ -225,3 +225,72 @@ async def remove_user_account(user_id: int) -> None:
 
     await delete_user_avatar(user_id=user_id)
     await delete_user_from_db(user_id=user_id)
+
+
+async def update_user_last_online_listener(current_user_id: int, websocket: WebSocket) -> None:
+    async def send_recipients_last_online():
+        result = list()
+        for user_online_obj in recipients_last_online_objs:
+            result.append(
+                {
+                    "user_id": user_online_obj.user_id,
+                    "last_online": user_online_obj.last_online.strftime("%Y-%m-%d %H:%M:%S") if user_online_obj.last_online is not None else None
+                }
+            )
+
+        await websocket.send_json(result)
+
+    pubsub = redis_client.pubsub()
+    await pubsub.subscribe("user:last_online_events", "user:recipients_change_events")
+
+    user_recipients_ids = await fetch_user_recipients_last_online(user_id=current_user_id)
+    recipients_last_online_objs = await fetch_users_online_status(users_ids=user_recipients_ids)
+    await send_recipients_last_online()
+
+    try:
+        async for message in pubsub.listen():
+            if message["type"] != "message":
+                continue
+            channel = message["channel"].decode()
+            payload = message["data"].decode()
+
+            match channel:
+                case "user:recipients_change_events":
+                    event_user_id = int(payload)
+                    if event_user_id != current_user_id:
+                        continue
+
+                    temp_user_recipients_ids = await fetch_user_recipients_last_online(user_id=current_user_id)
+                    new_recipients_ids = list(set(temp_user_recipients_ids)-set(user_recipients_ids))
+                    deleted_recipients_ids = list(set(user_recipients_ids)-set(temp_user_recipients_ids))
+                    if new_recipients_ids:
+                        recipients_last_online_objs.extend(
+                            await fetch_users_online_status(users_ids=new_recipients_ids)
+                        )
+                    if deleted_recipients_ids:
+                        for recipient_last_online_obj in recipients_last_online_objs:
+                            if recipient_last_online_obj.user_id not in deleted_recipients_ids:
+                                continue
+                            recipients_last_online_objs.remove(recipient_last_online_obj)
+
+                    user_recipients_ids = temp_user_recipients_ids.copy()
+                    await send_recipients_last_online()
+
+                case "user:last_online_events":
+                    event_user_id = int(payload)
+                    if event_user_id not in user_recipients_ids:
+                        continue
+
+                    for recipient_last_online_obj in recipients_last_online_objs:
+                        if recipient_last_online_obj.user_id != event_user_id:
+                            continue
+                        recipients_last_online_objs.remove(recipient_last_online_obj)
+                        recipients_last_online_objs.extend(
+                            await fetch_users_online_status(users_ids=[event_user_id])
+                        )
+
+                    await send_recipients_last_online()
+    except:
+        pass
+    finally:
+        await pubsub.unsubscribe("user:last_online_events", "user:recipients_change_events")
