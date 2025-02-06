@@ -2,9 +2,9 @@ from fastapi import APIRouter, Depends, status, Query, Body, Header
 from fastapi.responses import StreamingResponse
 from typing import Annotated
 
-from dependencies import verify_token
+from dependencies import verify_token, update_user_last_online
 from utilities import FileRangeError
-from validators import update_user_last_online, verify_current_user_is_existed
+from validators import verify_current_user_is_existed
 from storage import FileManager
 from services import (
     update_user_message,
