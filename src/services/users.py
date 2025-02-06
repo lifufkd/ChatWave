@@ -11,7 +11,7 @@ from repository import (
     fetch_users_from_db,
     delete_conversation_in_db,
     delete_user_from_db,
-    get_conversation_messages_id
+    get_conversation_messages_id, is_user_exists
 )
 from validators import verify_user_is_existed, verify_users_is_existed
 from schemas import (
@@ -258,6 +258,10 @@ async def unread_messages_listener(current_user_id: int, websocket: WebSocket) -
 
     try:
         async for message in pubsub.listen():
+            if not (await is_user_exists(user_id=current_user_id)):
+                await websocket.close(code=1008)
+                break
+
             if message["type"] != "message":
                 continue
 
@@ -298,6 +302,10 @@ async def user_last_online_listener(current_user_id: int, websocket: WebSocket) 
 
     try:
         async for message in pubsub.listen():
+            if not (await is_user_exists(user_id=current_user_id)):
+                await websocket.close(code=1008)
+                break
+
             if message["type"] != "message":
                 continue
             channel = message["channel"].decode()
