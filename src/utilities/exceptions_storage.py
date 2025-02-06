@@ -10,9 +10,6 @@ class InvalidCredentials(Exception):
         super().__init__(detail)
 
 
-web_socket_invalid_data = WebSocketDisconnect(code=1000, reason="Invalid data type received")
-
-
 class UserNotFoundError(Exception):
     def __init__(self, user_id: int | None = None):
         if user_id is None:
