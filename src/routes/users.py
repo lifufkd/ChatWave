@@ -40,7 +40,8 @@ from services import (
     leave_group,
     fetch_user_unread_messages,
     fetch_user_recipients_last_online,
-    fetch_users_online_status, update_user_last_online_listener
+    fetch_users_online_status,
+    user_last_online_listener, unread_messages_listener
 )
 
 users_router = APIRouter(
@@ -115,7 +116,10 @@ async def get_users_last_online_rest(
 
 
 @anonymous_users_router.websocket("/ws/online")
-async def get_users_last_online_ws(websocket: WebSocket, current_user_id: Annotated[str, Depends(verify_token_ws)]):
+async def get_users_last_online_ws(
+        websocket: WebSocket,
+        current_user_id: Annotated[str, Depends(verify_token_ws)]
+):
     await websocket.accept()
     if current_user_id is None:
         await websocket.close(code=1008)
@@ -123,7 +127,7 @@ async def get_users_last_online_ws(websocket: WebSocket, current_user_id: Annota
         await websocket.close(code=1008)
 
     try:
-        task = asyncio.create_task(update_user_last_online_listener(current_user_id, websocket))
+        task = asyncio.create_task(user_last_online_listener(current_user_id, websocket))
         await task
     except:
         pass
@@ -135,6 +139,24 @@ async def get_current_user_unread_messages(
 ):
     unread_messages_objs = await fetch_user_unread_messages(user_id=current_user_id)
     return unread_messages_objs
+
+
+@anonymous_users_router.websocket("/ws/messages/unread")
+async def get_current_user_unread_messages_ws(
+        websocket: WebSocket,
+        current_user_id: Annotated[str, Depends(verify_token_ws)]
+):
+    await websocket.accept()
+    if current_user_id is None:
+        await websocket.close(code=1008)
+    elif not (await is_user_exists(user_id=current_user_id)):
+        await websocket.close(code=1008)
+
+    try:
+        task = asyncio.create_task(unread_messages_listener(current_user_id, websocket))
+        await task
+    except:
+        pass
 
 
 @users_router.put("/me/avatar", status_code=status.HTTP_204_NO_CONTENT)
