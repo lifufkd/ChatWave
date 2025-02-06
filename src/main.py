@@ -1,3 +1,5 @@
+import asyncio
+
 from fastapi import FastAPI, status
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -6,6 +8,12 @@ from fastapi_cache.backends.redis import RedisBackend
 from contextlib import asynccontextmanager
 
 from dependencies import redis_client
+from triggers import (
+    setup_unread_messages_changes_trigger,
+    setup_unread_messages_changes_listener,
+    setup_recipients_change_trigger,
+    setup_recipients_change_listener
+)
 from repository import create_tables
 from routes import (
     authorization_router,
@@ -40,9 +48,15 @@ from utilities import (
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    FileManager.create_folders_structure()
-    FastAPICache.init(RedisBackend(redis_client), prefix="chatwave-cache")
     await create_tables()
+    await setup_unread_messages_changes_trigger()
+    await setup_recipients_change_trigger()
+    asyncio.create_task(setup_unread_messages_changes_listener())
+    asyncio.create_task(setup_recipients_change_listener())
+
+    FileManager.create_folders_structure()
+
+    FastAPICache.init(RedisBackend(redis_client), prefix="chatwave-cache")
     yield
 
 app = FastAPI(
@@ -60,6 +74,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 @app.exception_handler(Exception)
 async def exception_handler(request, exc: Exception) -> JSONResponse:
