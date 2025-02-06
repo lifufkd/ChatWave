@@ -317,7 +317,7 @@ async def user_last_online_listener(current_user_id: int, websocket: WebSocket) 
                     event_data = json.loads(payload)
                     event_user_id = int(event_data.get("user_id"))
                     event_conversation_id = int(event_data.get("conversation_id"))
-                    if event_conversation_id not in user_conversations_ids or event_user_id != current_user_id:
+                    if event_conversation_id not in user_conversations_ids and event_user_id != current_user_id:
                         continue
 
                     temp_user_conversations_ids = await fetch_user_conversations_ids(user_id=current_user_id)
