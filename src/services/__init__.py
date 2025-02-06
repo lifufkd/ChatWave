@@ -13,7 +13,8 @@ from .users import (
     fetch_user_conversations,
     remove_user_account,
     fetch_user_unread_messages,
-    update_user_last_online_listener
+    user_last_online_listener,
+    unread_messages_listener
 )
 from .conversations import (
     create_private_conversation,
