@@ -11,8 +11,12 @@ class DBSettings(BaseSettings):
     DB_SCHEMA: str
 
     @property
-    def postgresql_url(self):
+    def sqlalchemy_postgresql_url(self):
         return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_DATABASE}"
+
+    @property
+    def asyncpg_postgresql_url(self):
+        return f"postgresql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_DATABASE}"
 
     class Config:
         env_file = ".env"
