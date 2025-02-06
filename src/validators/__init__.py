@@ -17,7 +17,6 @@ from .messages import (
     validate_user_can_manage_messages
 )
 from .users import (
-    update_user_last_online,
     verify_current_user_is_existed,
     verify_user_is_existed,
     verify_users_is_existed

@@ -36,7 +36,6 @@ from .exceptions_storage import (
     MessageNotFound,
     UserNotInConversation,
     FileRangeError,
-    web_socket_invalid_data,
     UnreadMessageAlreadyExists
 )
 from .models_validators import (
