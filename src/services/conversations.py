@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from dependencies import redis_client
 from .messages import remove_media_messages
 from validators import (
     validate_user_in_conversation,
@@ -137,6 +138,7 @@ async def add_group_members(user_id: int, group_id: int, users_ids: list[int]) -
         conversation_id=group_id,
         role=ConversationMemberRoles.MEMBER
     )
+    await redis_client.publish(f"user:recipients_change_events", str(user_id))
 
 
 async def upload_group_avatar(user_id: int, group_id: int, avatar_data: Avatar) -> None:
@@ -223,6 +225,8 @@ async def remove_group_members(user_id: int, group_id: int, members_data: list[D
     await delete_conversation_members_in_db(conversation_id=group_id, members_ids=members_ids)
     await delete_sender_messages(conversation_id=group_id, members_ids=members_ids_to_delete_messages)
 
+    await redis_client.publish(f"user:recipients_change_events", str(user_id))
+
 
 async def delete_group_avatar(group_id: int) -> None:
     if not (await fetch_conversation_type_from_db(conversation_id=group_id)) == ConversationTypes.GROUP:
@@ -244,6 +248,8 @@ async def delete_conversation_by_id(user_id: int, conversation_id: int) -> None:
     await remove_media_messages(user_id=user_id, messages_ids=messages_ids)
 
     await delete_conversation_in_db(conversation_id=conversation_id)
+
+    await redis_client.publish(f"user:recipients_change_events", str(user_id))
 
 
 async def leave_group(user_id: int, group_id: int, delete_messages: bool = False) -> None:
@@ -284,6 +290,7 @@ async def leave_group(user_id: int, group_id: int, delete_messages: bool = False
             await delete_sender_messages(conversation_id=group_id, members_ids=[user_id])
 
         await delete_conversation_members_in_db(conversation_id=group_id, members_ids=[user_id])
+        await redis_client.publish(f"user:recipients_change_events", str(user_id))
 
 
 async def delete_all_messages(user_id: int, conversation_id: int):
