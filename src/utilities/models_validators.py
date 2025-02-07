@@ -7,11 +7,11 @@ def validate_password(value: str) -> str | None:
     if value is None:
         return value
 
-    if not re.search(r'[a-z]', value):  # минимум одна строчная буква
+    if not re.search(r'[a-z]', value):
         raise ValueError('Password must contain at least one lowercase letter')
-    if not re.search(r'[A-Z]', value):  # минимум одна прописная буква
+    if not re.search(r'[A-Z]', value):
         raise ValueError('Password must contain at least one uppercase letter')
-    if not re.search(r'[0-9]', value):  # минимум одна цифра
+    if not re.search(r'[0-9]', value):
         raise ValueError('Password must contain at least one digit')
 
     return value
@@ -47,4 +47,3 @@ class ValidateModelNotEmpty(BaseModel):
         if not any(values.values()):
             raise ValueError("At least one field must be filled.")
         return values
-

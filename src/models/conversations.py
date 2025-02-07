@@ -49,5 +49,3 @@ class Conversations(OrmBase):
 #
 #
 # event.listen(Conversations, "after_delete", delete_media_file)
-
-

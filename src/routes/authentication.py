@@ -1,10 +1,9 @@
 from fastapi import APIRouter, Depends, status
 from fastapi.security.oauth2 import OAuth2PasswordRequestForm
-from fastapi_cache.decorator import cache
 from typing import Annotated
 
 from schemas import CreateUser
-from services import get_access_token, add_user
+from services import get_access_token, create_user
 
 
 authorization_router = APIRouter(
@@ -21,4 +20,4 @@ async def login(request: Annotated[OAuth2PasswordRequestForm, Depends()]):
 
 @authorization_router.post('/signup', status_code=status.HTTP_201_CREATED)
 async def signup(request: CreateUser):
-    await add_user(request_data=request)
+    await create_user(request_data=request)

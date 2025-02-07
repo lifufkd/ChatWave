@@ -1,4 +1,4 @@
-from sqlalchemy import text, Index, ForeignKey
+from sqlalchemy import Index, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database import OrmBase
@@ -51,6 +51,3 @@ class Messages(OrmBase):
 #
 #
 # event.listen(Messages, "before_delete", delete_media_file)
-
-
-

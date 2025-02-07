@@ -1,5 +1,4 @@
 from typing import Union, Literal
-from fastapi import WebSocketDisconnect
 
 from utilities import MessagesTypes
 

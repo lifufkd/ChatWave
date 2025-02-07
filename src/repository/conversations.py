@@ -20,7 +20,7 @@ async def is_conversation_exists(conversation_id: int) -> bool:
         return False
 
 
-async def fetch_conversation_type_from_db(conversation_id: int) -> ConversationTypes:
+async def select_conversation_type(conversation_id: int) -> ConversationTypes:
     async with session() as cursor:
         query = (
             select(Conversations.type)
@@ -30,7 +30,7 @@ async def fetch_conversation_type_from_db(conversation_id: int) -> ConversationT
         return result.scalar()
 
 
-async def insert_conversation_into_db(conversation_obj: CreateEmptyConversation | CreateGroupDB) -> int:
+async def select_conversation(conversation_obj: CreateEmptyConversation | CreateGroupDB) -> Conversations.id:
     async with session() as cursor:
         query = (
             insert(Conversations).returning(Conversations.id)
@@ -45,7 +45,7 @@ async def insert_conversation_into_db(conversation_obj: CreateEmptyConversation 
         return raw_data
 
 
-async def fetch_conversation_from_db(conversation_id: int) -> Conversations:
+async def select_conversation_by_id(conversation_id: int) -> Conversations:
     async with session() as cursor:
         query = (
             select(Conversations)
@@ -56,7 +56,7 @@ async def fetch_conversation_from_db(conversation_id: int) -> Conversations:
         return result.scalar()
 
 
-async def fetch_conversations_from_db(conversations_ids: list[int]) -> list[Conversations]:
+async def select_conversations(conversations_ids: list[int]) -> list[Conversations]:
     async with session() as cursor:
         query = (
             select(Conversations)
@@ -67,7 +67,7 @@ async def fetch_conversations_from_db(conversations_ids: list[int]) -> list[Conv
         return result.scalars().all()
 
 
-async def delete_conversation_avatar_from_db(conversation_id: int) -> None:
+async def delete_conversation_avatar(conversation_id: int) -> None:
     async with session() as cursor:
         query = (
             update(Conversations)
@@ -81,7 +81,7 @@ async def delete_conversation_avatar_from_db(conversation_id: int) -> None:
         await cursor.commit()
 
 
-async def update_conversation_details_in_db(conversation_id: int, conversation_obj: EditConversationDB):
+async def update_conversation(conversation_id: int, conversation_obj: EditConversationDB):
     async with session() as cursor:
         query = (
             update(Conversations)
@@ -92,7 +92,7 @@ async def update_conversation_details_in_db(conversation_id: int, conversation_o
         await cursor.commit()
 
 
-async def delete_conversation_in_db(conversation_id: int) -> None:
+async def delete_conversation(conversation_id: int) -> None:
     async with session() as cursor:
         query = (
             delete(Conversations)
@@ -100,5 +100,3 @@ async def delete_conversation_in_db(conversation_id: int) -> None:
         )
         await cursor.execute(query)
         await cursor.commit()
-
-

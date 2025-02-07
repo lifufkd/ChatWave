@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from io import BytesIO
 from pathlib import Path
-from typing import Iterator
 
 from utilities import MessagesTypes
 

@@ -1,10 +1,10 @@
 from sqlalchemy import select, delete, and_, func, update, asc, insert
-from models import Users, ConversationMembers
+from models import ConversationMembers
 from utilities import ConversationMemberRoles
 from database import session
 
 
-async def add_members_to_conversation_in_db(
+async def insert_members_to_conversation(
         users_ids: list[int],
         conversation_id: int,
         role: ConversationMemberRoles
@@ -24,7 +24,7 @@ async def add_members_to_conversation_in_db(
         await cursor.commit()
 
 
-async def delete_conversation_members_in_db(conversation_id: int, members_ids: list[int]) -> None:
+async def delete_conversation_members(conversation_id: int, members_ids: list[int]) -> None:
     async with session() as cursor:
         query = (
             delete(ConversationMembers)
@@ -39,7 +39,7 @@ async def delete_conversation_members_in_db(conversation_id: int, members_ids: l
         await cursor.commit()
 
 
-async def update_conversation_member_in_db(conversation_id: int, member_id: int, role: ConversationMemberRoles) -> None:
+async def update_conversation_member(conversation_id: int, member_id: int, role: ConversationMemberRoles) -> None:
     async with session() as cursor:
         query = (
             update(ConversationMembers)
@@ -55,7 +55,7 @@ async def update_conversation_member_in_db(conversation_id: int, member_id: int,
         await cursor.commit()
 
 
-async def get_conversation_member_role_from_db(user_id: int, conversation_id: int) -> ConversationMemberRoles:
+async def select_conversation_member_role(user_id: int, conversation_id: int) -> ConversationMemberRoles:
     async with session() as cursor:
         query = (
             select(ConversationMembers.role)
@@ -68,7 +68,7 @@ async def get_conversation_member_role_from_db(user_id: int, conversation_id: in
         return result.scalar()
 
 
-async def get_conversation_members_quantity_in_db(conversation_id: int) -> int:
+async def select_conversation_members_quantity(conversation_id: int) -> int:
     async with session() as cursor:
         query = (
             select(func.count())
@@ -79,7 +79,7 @@ async def get_conversation_members_quantity_in_db(conversation_id: int) -> int:
         return result.scalar()
 
 
-async def get_conversation_members_in_db(conversation_id: int) -> list[ConversationMembers]:
+async def select_conversation_members(conversation_id: int) -> list[ConversationMembers]:
     async with session() as cursor:
         query = (
             select(ConversationMembers)
@@ -90,7 +90,7 @@ async def get_conversation_members_in_db(conversation_id: int) -> list[Conversat
         return result.scalars().all()
 
 
-async def get_conversation_admin_members_from_db(conversation_id: int) -> list[ConversationMembers]:
+async def select_conversation_admin_members(conversation_id: int) -> list[ConversationMembers]:
     async with session() as cursor:
         query = (
             select(ConversationMembers)

@@ -1,7 +1,6 @@
-from fastapi import UploadFile
 from pydantic import BaseModel
 from typing import Type, TypeVar, List
-from io import BytesIO
+
 
 T = TypeVar('T', bound=BaseModel)
 
@@ -18,4 +17,3 @@ async def many_sqlalchemy_to_pydantic(
     pydantic_model: Type[T],
 ) -> List[T]:
     return [await sqlalchemy_to_pydantic(sqlalchemy_model=row, pydantic_model=pydantic_model) for row in sqlalchemy_models]
-

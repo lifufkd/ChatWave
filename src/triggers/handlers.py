@@ -1,8 +1,6 @@
 import json
 
 from dependencies import redis_client
-from repository import get_message
-from services import fetch_message_media_metadata
 from storage import FileManager
 from utilities import MediaPatches
 

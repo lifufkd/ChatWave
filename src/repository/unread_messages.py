@@ -1,5 +1,4 @@
-from sqlalchemy import select, update, insert, and_, func, delete
-from sqlalchemy.orm import selectinload
+from sqlalchemy import select, insert, func, delete
 
 from models import UnreadMessages
 from database import session

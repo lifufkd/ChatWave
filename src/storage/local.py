@@ -1,6 +1,5 @@
 from io import BytesIO
 from pathlib import Path
-from typing import Iterator
 
 from .base import BaseStorage
 from utilities import MessagesTypes, MediaPatches

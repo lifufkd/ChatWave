@@ -19,4 +19,3 @@ async def verify_users_is_existed(users_ids: list[int]) -> None:
 async def verify_current_user_is_existed(current_user_id: Annotated[int, Depends(verify_token)]) -> None:
     if not (await is_user_exists(user_id=current_user_id)):
         raise UserNotFoundError(user_id=current_user_id)
-

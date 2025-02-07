@@ -31,4 +31,3 @@ class UnreadMessages(OrmBase):
             "call_id",
             name="unread_messages_conversation_id_user_id_message_id_call_id"),
     )
-

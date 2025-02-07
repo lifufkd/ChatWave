@@ -12,25 +12,22 @@ from validators import (
     verify_user_is_existed
 )
 from repository import (
-    insert_conversation_into_db,
-    add_members_to_conversation_in_db,
-    fetch_conversation_from_db,
-    update_conversation_details_in_db,
-    fetch_conversations_from_db,
-    fetch_user_from_db,
-    delete_conversation_avatar_from_db,
-    get_conversation_member_role_from_db,
-    delete_conversation_members_in_db,
-    delete_conversation_in_db,
+    select_conversation,
+    insert_members_to_conversation,
+    select_conversation_by_id,
+    update_conversation,
+    select_conversations,
+    select_user,
+    delete_conversation_avatar,
+    select_conversation_member_role,
+    delete_conversation_members,
+    delete_conversation,
     delete_sender_messages,
-    get_conversation_members_quantity_in_db,
-    get_conversation_members_in_db,
-    get_conversation_admin_members_from_db,
-    update_conversation_member_in_db,
-    delete_conversation_messages,
-    get_conversation_messages_id,
-    fetch_conversation_type_from_db,
-    get_sender_conversation_messages_id
+    select_conversation_members_quantity,
+    select_conversation_members,
+    select_conversation_admin_members,
+    update_conversation_member,
+    delete_conversation_messages
 )
 from storage import FileManager
 from utilities import (
@@ -64,13 +61,13 @@ async def create_private_conversation(user_id: int, recipient_id: int) -> GetCon
         creator_id=user_id,
         type=ConversationTypes.PRIVATE,
     )
-    new_conversation_id = await insert_conversation_into_db(new_conversation_obj)
-    raw_new_conversation = await fetch_conversation_from_db(conversation_id=new_conversation_id)
+    new_conversation_id = await select_conversation(new_conversation_obj)
+    raw_new_conversation = await select_conversation_by_id(conversation_id=new_conversation_id)
     new_conversation_obj = await sqlalchemy_to_pydantic(
         sqlalchemy_model=raw_new_conversation,
         pydantic_model=GetConversations
     )
-    await add_members_to_conversation_in_db(
+    await insert_members_to_conversation(
         users_ids=[user_id, recipient_id],
         conversation_id=new_conversation_id,
         role=ConversationMemberRoles.MEMBER
@@ -86,13 +83,13 @@ async def create_group_conversation(user_id: int, group_data: CreateGroup) -> Ge
         **group_data.model_dump()
     )
 
-    new_conversation_id = await insert_conversation_into_db(new_conversation_obj)
-    raw_new_conversation = await fetch_conversation_from_db(conversation_id=new_conversation_id)
+    new_conversation_id = await select_conversation(new_conversation_obj)
+    raw_new_conversation = await select_conversation_by_id(conversation_id=new_conversation_id)
     new_conversation_obj = await sqlalchemy_to_pydantic(
         sqlalchemy_model=raw_new_conversation,
         pydantic_model=GetConversations
     )
-    await add_members_to_conversation_in_db(
+    await insert_members_to_conversation(
         users_ids=[user_id],
         conversation_id=new_conversation_id,
         role=ConversationMemberRoles.CREATOR
@@ -106,7 +103,7 @@ async def edit_group_details(user_id: int, group_id: int, group_data: EditConver
     await conversation_is_group(conversation_id=group_id)
 
     edit_conversation_obj = EditConversationDB(**group_data.model_dump())
-    await update_conversation_details_in_db(
+    await update_conversation(
         conversation_id=group_id,
         conversation_obj=edit_conversation_obj
     )
@@ -118,7 +115,7 @@ async def add_group_members(user_id: int, group_id: int, users_ids: list[int]) -
 
     members_ids = list()
     for member_id in users_ids:
-        member_obj = await fetch_user_from_db(user_id=member_id)
+        member_obj = await select_user(user_id=member_id)
         if member_obj is None:
             raise UserNotFoundError(user_id=member_id)
 
@@ -131,7 +128,7 @@ async def add_group_members(user_id: int, group_id: int, users_ids: list[int]) -
 
         members_ids.append(member_obj.id)
 
-    await add_members_to_conversation_in_db(
+    await insert_members_to_conversation(
         users_ids=members_ids,
         conversation_id=group_id,
         role=ConversationMemberRoles.MEMBER
@@ -154,7 +151,7 @@ async def upload_group_avatar(user_id: int, group_id: int, avatar_data: Avatar) 
 
     avatar_name = f"{group_id}.{avatar_data.file_name.split('.')[-1]}"
     await save_avatar_to_file()
-    await update_conversation_details_in_db(
+    await update_conversation(
         conversation_id=group_id,
         conversation_obj=EditConversationDB(
             avatar_name=avatar_name,
@@ -166,7 +163,7 @@ async def upload_group_avatar(user_id: int, group_id: int, avatar_data: Avatar) 
 async def fetch_group_avatar_metadata(user_id: int, group_id: int) -> dict[str, any]:
     await validate_user_in_group(user_id=user_id, group_id=group_id)
 
-    group_obj = await fetch_conversation_from_db(conversation_id=group_id)
+    group_obj = await select_conversation_by_id(conversation_id=group_id)
     filepath = MediaPatches.GROUPS_AVATARS_FOLDER.value / f"{group_obj.avatar_name}"
     if not (await FileManager().file_exists(file_path=filepath)):
         raise FileNotFound()
@@ -181,7 +178,7 @@ async def fetch_group_avatars_paths(user_id: int, conversations_ids: list[int]) 
     await validate_user_in_groups(user_id=user_id, groups_ids=conversations_ids)
 
     avatars_paths = list()
-    groups_objects = await fetch_conversations_from_db(conversations_ids=conversations_ids)
+    groups_objects = await select_conversations(conversations_ids=conversations_ids)
     for group_obj in groups_objects:
         if group_obj.avatar_name is None:
             continue
@@ -199,7 +196,7 @@ async def remove_group_avatar(user_id: int, group_id: int, avatar_path: Path) ->
     await conversation_is_group(conversation_id=group_id)
 
     await FileManager().delete_file(file_path=avatar_path)
-    await delete_conversation_avatar_from_db(conversation_id=group_id)
+    await delete_conversation_avatar(conversation_id=group_id)
 
 
 async def remove_group_members(user_id: int, group_id: int, members_data: list[DeleteGroupMembers]) -> None:
@@ -219,19 +216,19 @@ async def remove_group_members(user_id: int, group_id: int, members_data: list[D
 
         members_ids_to_delete_messages.append(member_obj.user_id)
 
-    await delete_conversation_members_in_db(conversation_id=group_id, members_ids=members_ids)
+    await delete_conversation_members(conversation_id=group_id, members_ids=members_ids)
     await delete_sender_messages(conversation_id=group_id, members_ids=members_ids_to_delete_messages)
 
 
 async def delete_conversation_by_id(user_id: int, conversation_id: int) -> None:
     await validate_user_can_manage_conversation(user_id=user_id, conversation_id=conversation_id)
-    await delete_conversation_in_db(conversation_id=conversation_id)
+    await delete_conversation(conversation_id=conversation_id)
 
 
 async def leave_group(user_id: int, group_id: int, delete_messages: bool = False) -> None:
 
     async def get_new_admin_user_id() -> int:
-        group_users_ordered_by_join_time = await get_conversation_members_in_db(conversation_id=group_id)
+        group_users_ordered_by_join_time = await select_conversation_members(conversation_id=group_id)
         for member_obj in group_users_ordered_by_join_time:
             if user_id == member_obj.user_id:
                 continue
@@ -239,17 +236,17 @@ async def leave_group(user_id: int, group_id: int, delete_messages: bool = False
 
     await validate_user_in_group(user_id=user_id, group_id=group_id)
 
-    group_members_quantity = await get_conversation_members_quantity_in_db(conversation_id=group_id)
+    group_members_quantity = await select_conversation_members_quantity(conversation_id=group_id)
     if group_members_quantity == 1:
-        await delete_conversation_in_db(conversation_id=group_id)
+        await delete_conversation(conversation_id=group_id)
     else:
-        user_group_role = await get_conversation_member_role_from_db(user_id=user_id, conversation_id=group_id)
+        user_group_role = await select_conversation_member_role(user_id=user_id, conversation_id=group_id)
         if user_group_role != ConversationMemberRoles.MEMBER:
 
-            admin_users_quantity = len((await get_conversation_admin_members_from_db(conversation_id=group_id)))
+            admin_users_quantity = len((await select_conversation_admin_members(conversation_id=group_id)))
             if admin_users_quantity == 1:
                 new_admin_user_id = await get_new_admin_user_id()
-                await update_conversation_member_in_db(
+                await update_conversation_member(
                     conversation_id=group_id,
                     member_id=new_admin_user_id,
                     role=ConversationMemberRoles.ADMIN
@@ -258,7 +255,7 @@ async def leave_group(user_id: int, group_id: int, delete_messages: bool = False
         if delete_messages:
             await delete_sender_messages(conversation_id=group_id, members_ids=[user_id])
 
-        await delete_conversation_members_in_db(conversation_id=group_id, members_ids=[user_id])
+        await delete_conversation_members(conversation_id=group_id, members_ids=[user_id])
 
 
 async def delete_all_messages(user_id: int, conversation_id: int):

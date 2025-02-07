@@ -1,7 +1,6 @@
-import asyncio
 import zipfile
 from PIL import Image
-from typing import Union, Literal, Iterable, Iterator
+from typing import Union, Literal
 from pathlib import Path
 from io import BytesIO
 

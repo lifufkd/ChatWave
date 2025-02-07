@@ -1,16 +1,15 @@
-from sqlalchemy import String, Index, event
+from sqlalchemy import String
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from datetime import date
 
 from database import OrmBase
-from storage import FileManager
 from utilities import (
     datetime_auto_set,
     datetime_not_required_type,
     text_not_required_type,
     primary_key_type,
     datetime_auto_update,
-    text_required_type, MediaPatches
+    text_required_type
 )
 
 

@@ -1,4 +1,4 @@
-from sqlalchemy import select, update, insert, and_, func, delete, text
+from sqlalchemy import select, update, insert, and_, delete, text
 from sqlalchemy.orm import selectinload
 
 from models import Messages
@@ -93,7 +93,7 @@ async def update_message(message_id: int, content: str) -> None:
         await cursor.commit()
 
 
-async def get_message(message_id: int) -> Messages:
+async def select_message(message_id: int) -> Messages:
     async with session() as cursor:
         query = (
             select(Messages)
@@ -103,7 +103,7 @@ async def get_message(message_id: int) -> Messages:
         return result.scalar()
 
 
-async def get_messages(messages_ids: list[int]) -> list[Messages]:
+async def select_messages(messages_ids: list[int]) -> list[Messages]:
     async with session() as cursor:
         query = (
             select(Messages)
@@ -114,17 +114,7 @@ async def get_messages(messages_ids: list[int]) -> list[Messages]:
         return result.scalars()
 
 
-async def get_conversation_messages_id(conversation_id: int) -> list[Messages.id]:
-    async with session() as cursor:
-        query = (
-            select(Messages.id)
-            .filter_by(conversation_id=conversation_id)
-        )
-        raw_data = await cursor.execute(query)
-        return raw_data.scalars().all()
-
-
-async def get_message_status(message_id: int) -> MessagesStatus:
+async def select_message_status(message_id: int) -> MessagesStatus:
     async with session() as cursor:
         query = (
             select(Messages.status)
@@ -134,18 +124,7 @@ async def get_message_status(message_id: int) -> MessagesStatus:
         return raw_data.scalar()
 
 
-async def get_sender_conversation_messages_id(sender_id: int, conversation_id: int) -> list[Messages.id]:
-    async with session() as cursor:
-        query = (
-            select(Messages.id)
-            .filter_by(conversation_id=conversation_id)
-            .filter_by(sender_id=sender_id)
-        )
-        raw_data = await cursor.execute(query)
-        return raw_data.scalars().all()
-
-
-async def get_filtered_messages(conversation_id: int, limit: int, offset: int) -> list[Messages]:
+async def select_filtered_messages(conversation_id: int, limit: int, offset: int) -> list[Messages]:
     async with session() as cursor:
         query = (
             select(Messages)
@@ -165,7 +144,7 @@ async def get_filtered_messages(conversation_id: int, limit: int, offset: int) -
         return result
 
 
-async def search_messages(conversation_id: int, search_query: str, limit: int) -> list[Messages]:
+async def select_messages_by_content(conversation_id: int, search_query: str, limit: int) -> list[Messages]:
     async with session() as cursor:
         query = (
             select(Messages)

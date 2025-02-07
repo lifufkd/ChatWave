@@ -1,9 +1,7 @@
 from typing import Optional, Annotated
-from pydantic import BaseModel, Field, field_validator, model_validator
-from datetime import datetime
+from pydantic import BaseModel, Field, model_validator
 
-from utilities import MessagesStatus, MessagesTypes, request_limit, ValidateModelNotEmpty, check_exclusive_fields, \
-    EntitiesTypes
+from utilities import check_exclusive_fields
 
 
 class UnreadMessageBase(BaseModel):
@@ -43,5 +41,3 @@ class AddUnreadMessagesDB(BaseModel):
     conversation_id: int
     message_id: Annotated[Optional[int], Field(None)]
     call_id: Annotated[Optional[int], Field(None)]
-
-

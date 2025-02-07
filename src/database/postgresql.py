@@ -12,4 +12,3 @@ session = async_sessionmaker(bind=engine)
 
 class OrmBase(DeclarativeBase):
     metadata = MetaData(schema=db_settings.DB_SCHEMA)
-

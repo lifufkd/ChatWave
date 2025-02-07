@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import Depends, WebSocket
+from fastapi import Depends
 from jose import JWTError
 
 from utilities import oauth2_scheme, JWT, InvalidCredentials

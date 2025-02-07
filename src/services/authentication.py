@@ -1,11 +1,11 @@
 from sqlalchemy.exc import IntegrityError
 from schemas import CreateUser, CreateUserDB
-from repository import fetch_user_credentials_by_username, create_user_in_db
+from repository import select_user_by_username, insert_user
 from utilities import Hash, JWT, UserNotFoundError, InvalidPasswordError, UserAlreadyExists
 
 
 async def get_access_token(username: str, password: str) -> str:
-    user_data = await fetch_user_credentials_by_username(username)
+    user_data = await select_user_by_username(username)
 
     if not user_data:
         raise UserNotFoundError()
@@ -25,14 +25,12 @@ async def get_access_token(username: str, password: str) -> str:
     return access_token
 
 
-async def add_user(request_data: CreateUser) -> None:
+async def create_user(request_data: CreateUser) -> None:
     new_user_obj = CreateUserDB(
         password_hash=Hash.hash_password(request_data.password),
         **request_data.model_dump()
     )
     try:
-        await create_user_in_db(new_user_obj)
+        await insert_user(new_user_obj)
     except IntegrityError:
         raise UserAlreadyExists()
-
-

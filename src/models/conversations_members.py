@@ -3,7 +3,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from datetime import datetime
 
 from database import OrmBase
-from utilities import ConversationMemberRoles, datetime_auto_set
+from utilities import ConversationMemberRoles
 
 
 class ConversationMembers(OrmBase):
@@ -23,4 +23,3 @@ class ConversationMembers(OrmBase):
         index=True,
         server_default=text("TIMEZONE('utc', now())")
     )
-

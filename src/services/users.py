@@ -1,17 +1,17 @@
 import json
 from pathlib import Path
-from fastapi import WebSocket
+from fastapi import WebSocket, WebSocketDisconnect
 
 from dependencies import redis_client
 from repository import (
-    update_user_in_db,
-    search_users_in_db,
-    get_users_last_online_from_db,
-    delete_user_avatar_in_db,
-    fetch_user_from_db,
-    fetch_users_from_db,
-    delete_conversation_in_db,
-    delete_user_from_db,
+    update_user,
+    select_users_by_nickname,
+    select_users_last_online,
+    delete_user_avatar,
+    select_user,
+    select_users,
+    delete_conversation,
+    delete_user,
     is_user_exists
 )
 from validators import verify_user_is_existed, verify_users_is_existed
@@ -41,7 +41,7 @@ from utilities import (
 
 
 async def fetch_private_user(user_id: int) -> PrivateUser:
-    user_raw = await fetch_user_from_db(user_id=user_id)
+    user_raw = await select_user(user_id=user_id)
     user_obj = await sqlalchemy_to_pydantic(
         sqlalchemy_model=user_raw,
         pydantic_model=PrivateUser
@@ -53,7 +53,7 @@ async def fetch_private_user(user_id: int) -> PrivateUser:
 async def fetch_public_users(users_ids: list[int]) -> list[PublicUser]:
     await verify_users_is_existed(users_ids=users_ids)
 
-    raw_users = await fetch_users_from_db(users_ids=users_ids)
+    raw_users = await select_users(users_ids=users_ids)
     users_objs = await many_sqlalchemy_to_pydantic(
         sqlalchemy_models=raw_users,
         pydantic_model=PublicUser
@@ -63,7 +63,7 @@ async def fetch_public_users(users_ids: list[int]) -> list[PublicUser]:
 
 
 async def fetch_private_users(users_ids: list[int]) -> list[PrivateUser]:
-    raw_users = await fetch_users_from_db(users_ids=users_ids)
+    raw_users = await select_users(users_ids=users_ids)
     users_objs = await many_sqlalchemy_to_pydantic(
         sqlalchemy_models=raw_users,
         pydantic_model=PrivateUser
@@ -73,7 +73,7 @@ async def fetch_private_users(users_ids: list[int]) -> list[PrivateUser]:
 
 
 async def search_users_by_nickname(search_query: str, limit: int | None) -> list[PublicUser]:
-    raw_users = await search_users_in_db(search_query=search_query, limit=limit)
+    raw_users = await select_users_by_nickname(search_query=search_query, limit=limit)
     users_objs = await many_sqlalchemy_to_pydantic(
         sqlalchemy_models=raw_users,
         pydantic_model=PublicUser
@@ -84,7 +84,7 @@ async def search_users_by_nickname(search_query: str, limit: int | None) -> list
 
 async def fetch_user_conversations(user_id: int) -> list[GetConversationsDB]:
     result = list()
-    raw_user = await fetch_user_from_db(user_id=user_id)
+    raw_user = await select_user(user_id=user_id)
 
     for conversation_obj in raw_user.conversations:
         members_ids = list()
@@ -107,7 +107,7 @@ async def fetch_user_conversations(user_id: int) -> list[GetConversationsDB]:
 async def fetch_user_conversations_ids(user_id: int) -> list[int]:
     result = list()
 
-    raw_user = await fetch_user_from_db(user_id=user_id)
+    raw_user = await select_user(user_id=user_id)
     for conversation_obj in raw_user.conversations:
         result.append(conversation_obj.id)
 
@@ -119,7 +119,7 @@ async def update_user_profile(user_id: int, profile_data: UpdateUser) -> None:
     if profile_data.password is not None:
         update_user_obj.password_hash = Hash.hash_password(profile_data.password)
 
-    await update_user_in_db(user_id, update_user_obj)
+    await update_user(user_id, update_user_obj)
 
 
 async def upload_user_avatar(user_id: int, avatar_data: Avatar) -> None:
@@ -135,7 +135,7 @@ async def upload_user_avatar(user_id: int, avatar_data: Avatar) -> None:
 
     avatar_name = f"{user_id}.{avatar_data.file_name.split('.')[-1]}"
     await save_avatar_to_file()
-    await update_user_in_db(
+    await update_user(
         user_id=user_id,
         user_data=UpdateUserDB(
             avatar_name=avatar_name,
@@ -176,7 +176,7 @@ async def fetch_users_avatars_paths(users_ids: list[int]) -> list[Path]:
 
 
 async def fetch_user_unread_messages(user_id: int) -> list[GetUnreadMessages]:
-    raw_user_data = await fetch_user_from_db(user_id=user_id)
+    raw_user_data = await select_user(user_id=user_id)
     unread_messages_objs = await many_sqlalchemy_to_pydantic(
         sqlalchemy_models=raw_user_data.unread_messages,
         pydantic_model=GetUnreadMessages
@@ -187,14 +187,14 @@ async def fetch_user_unread_messages(user_id: int) -> list[GetUnreadMessages]:
 
 
 async def remove_user_avatar(user_id: int, avatar_path: Path) -> None:
+    await delete_user_avatar(user_id=user_id)
     await FileManager().delete_file(file_path=avatar_path)
-    await delete_user_avatar_in_db(user_id=user_id)
 
 
 async def fetch_user_recipients_last_online(user_id: int) -> list[int]:
     users_ids = list()
 
-    raw_user = await fetch_user_from_db(user_id=user_id)
+    raw_user = await select_user(user_id=user_id)
     for conversation_obj in raw_user.conversations:
         for member in conversation_obj.members:
             if member.id == user_id:
@@ -206,7 +206,7 @@ async def fetch_user_recipients_last_online(user_id: int) -> list[int]:
 
 async def fetch_users_online_status(users_ids: list[int]) -> list[UserOnline]:
     users_objs = list()
-    raw_users_data = await get_users_last_online_from_db(users_ids=users_ids)
+    raw_users_data = await select_users_last_online(users_ids=users_ids)
 
     for raw_user_data in raw_users_data:
         transformed_data = {
@@ -219,14 +219,14 @@ async def fetch_users_online_status(users_ids: list[int]) -> list[UserOnline]:
 
 
 async def remove_user_account(user_id: int) -> None:
-    user_obj = await fetch_user_from_db(user_id=user_id)
+    user_obj = await select_user(user_id=user_id)
     for conversation_obj in user_obj.conversations:
         if conversation_obj.type == ConversationTypes.PRIVATE:
-            await delete_conversation_in_db(conversation_id=conversation_obj.id)
+            await delete_conversation(conversation_id=conversation_obj.id)
         else:
             await leave_group(user_id=user_id, group_id=conversation_obj.id, delete_messages=True)
 
-    await delete_user_from_db(user_id=user_id)
+    await delete_user(user_id=user_id)
 
 
 async def unread_messages_listener(current_user_id: int, websocket: WebSocket) -> None:
@@ -250,10 +250,6 @@ async def unread_messages_listener(current_user_id: int, websocket: WebSocket) -
 
     try:
         async for message in pubsub.listen():
-            if not (await is_user_exists(user_id=current_user_id)):
-                await websocket.close(code=1008)
-                break
-
             if message["type"] != "message":
                 continue
 
@@ -262,10 +258,14 @@ async def unread_messages_listener(current_user_id: int, websocket: WebSocket) -
             if event_id != current_user_id:
                 continue
 
+            if not (await is_user_exists(user_id=current_user_id)):
+                await websocket.close(code=1008)
+                break
+
             unread_messages_objs = await fetch_user_unread_messages(user_id=current_user_id)
 
             await send_user_unread_messages()
-    except:
+    except WebSocketDisconnect:
         pass
     finally:
         await pubsub.unsubscribe("user:unread_messages")
@@ -275,10 +275,15 @@ async def user_last_online_listener(current_user_id: int, websocket: WebSocket) 
     async def send_recipients_last_online():
         result = list()
         for user_online_obj in recipients_last_online_objs:
+            if user_online_obj.last_online is None:
+                user_last_online = None
+            else:
+                user_last_online = user_online_obj.last_online.strftime("%Y-%m-%d %H:%M:%S")
+
             result.append(
                 {
                     "user_id": user_online_obj.user_id,
-                    "last_online": user_online_obj.last_online.strftime("%Y-%m-%d %H:%M:%S") if user_online_obj.last_online is not None else None
+                    "last_online": user_last_online
                 }
             )
 
@@ -294,10 +299,6 @@ async def user_last_online_listener(current_user_id: int, websocket: WebSocket) 
 
     try:
         async for message in pubsub.listen():
-            if not (await is_user_exists(user_id=current_user_id)):
-                await websocket.close(code=1008)
-                break
-
             if message["type"] != "message":
                 continue
             channel = message["channel"].decode()
@@ -310,6 +311,10 @@ async def user_last_online_listener(current_user_id: int, websocket: WebSocket) 
                     event_conversation_id = int(event_data.get("conversation_id"))
                     if event_conversation_id not in user_conversations_ids and event_user_id != current_user_id:
                         continue
+
+                    if not (await is_user_exists(user_id=current_user_id)):
+                        await websocket.close(code=1008)
+                        break
 
                     temp_user_conversations_ids = await fetch_user_conversations_ids(user_id=current_user_id)
                     temp_user_recipients_ids = await fetch_user_recipients_last_online(user_id=current_user_id)
@@ -334,6 +339,10 @@ async def user_last_online_listener(current_user_id: int, websocket: WebSocket) 
                     if event_user_id not in user_recipients_ids:
                         continue
 
+                    if not (await is_user_exists(user_id=current_user_id)):
+                        await websocket.close(code=1008)
+                        break
+
                     for recipient_last_online_obj in recipients_last_online_objs:
                         if recipient_last_online_obj.user_id != event_user_id:
                             continue
@@ -343,7 +352,7 @@ async def user_last_online_listener(current_user_id: int, websocket: WebSocket) 
                         )
 
                     await send_recipients_last_online()
-    except:
+    except WebSocketDisconnect:
         pass
     finally:
         await pubsub.unsubscribe("user:last_online_events", "user:recipients_change_events")

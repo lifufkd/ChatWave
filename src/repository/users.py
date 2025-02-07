@@ -20,7 +20,7 @@ async def is_user_exists(user_id: int) -> bool:
         return False
 
 
-async def fetch_user_credentials_by_username(username: str) -> tuple[int, str]:
+async def select_user_by_username(username: str) -> tuple[int, str]:
     async with session() as cursor:
         query = (
             select(Users.id, Users.password_hash)
@@ -32,7 +32,7 @@ async def fetch_user_credentials_by_username(username: str) -> tuple[int, str]:
         return raw_data
 
 
-async def create_user_in_db(user_data: CreateUserDB) -> None:
+async def insert_user(user_data: CreateUserDB) -> None:
     async with session() as cursor:
         query = (
             insert(Users)
@@ -42,7 +42,7 @@ async def create_user_in_db(user_data: CreateUserDB) -> None:
         await cursor.commit()
 
 
-async def fetch_user_from_db(user_id: int) -> Users:
+async def select_user(user_id: int) -> Users:
     async with session() as cursor:
         query = (
             select(Users)
@@ -56,7 +56,7 @@ async def fetch_user_from_db(user_id: int) -> Users:
         return raw_data
 
 
-async def fetch_users_from_db(users_ids: list[int]) -> list[Users]:
+async def select_users(users_ids: list[int]) -> list[Users]:
     async with session() as cursor:
         query = (
             select(Users)
@@ -68,7 +68,7 @@ async def fetch_users_from_db(users_ids: list[int]) -> list[Users]:
         return raw_data
 
 
-async def search_users_in_db(search_query: str, limit: int | None) -> list[Users]:
+async def select_users_by_nickname(search_query: str, limit: int | None) -> list[Users]:
 
     async def query_builder():
         if limit is None:
@@ -93,7 +93,7 @@ async def search_users_in_db(search_query: str, limit: int | None) -> list[Users
         return raw_data
 
 
-async def update_user_in_db(user_id: int, user_data: UpdateUserDB) -> None:
+async def update_user(user_id: int, user_data: UpdateUserDB) -> None:
     async with session() as cursor:
         query = (
             update(Users)
@@ -104,7 +104,7 @@ async def update_user_in_db(user_id: int, user_data: UpdateUserDB) -> None:
         await cursor.commit()
 
 
-async def delete_user_avatar_in_db(user_id: int) -> None:
+async def delete_user_avatar(user_id: int) -> None:
     async with session() as cursor:
         query = (
             update(Users)
@@ -118,7 +118,7 @@ async def delete_user_avatar_in_db(user_id: int) -> None:
         await cursor.commit()
 
 
-async def update_user_last_online_in_db(user_id: int) -> None:
+async def update_user_last_online(user_id: int) -> None:
     async with session() as cursor:
         query = (
             update(Users)
@@ -132,7 +132,7 @@ async def update_user_last_online_in_db(user_id: int) -> None:
         await cursor.commit()
 
 
-async def get_users_last_online_from_db(users_ids: list[int]) -> list[tuple[int, datetime]]:
+async def select_users_last_online(users_ids: list[int]) -> list[tuple[int, datetime]]:
     async with session() as cursor:
         query = (
             select(Users.id, Users.last_online)
@@ -144,7 +144,7 @@ async def get_users_last_online_from_db(users_ids: list[int]) -> list[tuple[int,
         return raw_data
 
 
-async def delete_user_from_db(user_id: int):
+async def delete_user(user_id: int) -> None:
     async with session() as cursor:
         query = (
             delete(Users)

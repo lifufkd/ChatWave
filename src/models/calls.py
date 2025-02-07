@@ -33,5 +33,3 @@ class Calls(OrmBase):
         back_populates="calls",
     )
     unread_messages: Mapped[list["UnreadMessages"]] = relationship()
-
-

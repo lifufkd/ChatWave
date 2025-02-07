@@ -1,5 +1,4 @@
 from celery import Celery
-from celery.schedules import crontab
 
 from utilities import redis_settings
 

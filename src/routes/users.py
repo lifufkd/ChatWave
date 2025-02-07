@@ -7,8 +7,7 @@ from fastapi import (
     File,
     Query,
     Body,
-    WebSocket,
-    WebSocketDisconnect
+    WebSocket
 )
 from fastapi.responses import StreamingResponse
 from typing import Annotated
@@ -23,7 +22,7 @@ from schemas import (
     UserOnline,
     GetConversationsDB, GetUnreadMessages
 )
-from dependencies import verify_token, update_user_last_online, verify_token_ws
+from dependencies import verify_token, update_last_online, verify_token_ws
 from storage import FileManager
 from validators import verify_current_user_is_existed
 from services import (
@@ -47,7 +46,7 @@ from services import (
 users_router = APIRouter(
     tags=["Users"],
     prefix="/users",
-    dependencies=[Depends(update_user_last_online), Depends(verify_current_user_is_existed)]
+    dependencies=[Depends(update_last_online), Depends(verify_current_user_is_existed)]
 )
 
 anonymous_users_router = APIRouter(
@@ -126,11 +125,8 @@ async def get_users_last_online_ws(
     elif not (await is_user_exists(user_id=current_user_id)):
         await websocket.close(code=1008)
 
-    try:
-        task = asyncio.create_task(user_last_online_listener(current_user_id, websocket))
-        await task
-    except:
-        pass
+    task = asyncio.create_task(user_last_online_listener(current_user_id, websocket))
+    await task
 
 
 @users_router.get("/messages/unread", status_code=status.HTTP_200_OK, response_model=list[GetUnreadMessages])
@@ -152,11 +148,8 @@ async def get_current_user_unread_messages_ws(
     elif not (await is_user_exists(user_id=current_user_id)):
         await websocket.close(code=1008)
 
-    try:
-        task = asyncio.create_task(unread_messages_listener(current_user_id, websocket))
-        await task
-    except:
-        pass
+    task = asyncio.create_task(unread_messages_listener(current_user_id, websocket))
+    await task
 
 
 @users_router.put("/me/avatar", status_code=status.HTTP_204_NO_CONTENT)

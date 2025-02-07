@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, status, UploadFile, File, Query, Body, F
 from fastapi.responses import StreamingResponse
 from typing import Annotated, Optional
 
-from dependencies import verify_token, update_user_last_online
+from dependencies import verify_token, update_last_online
 from schemas.unread_messages import AddUnreadMessages
 from utilities import EntitiesTypes
 from validators import verify_current_user_is_existed
@@ -40,7 +40,7 @@ from storage import FileManager
 conversations_router = APIRouter(
     tags=["Conversations"],
     prefix="/conversations",
-    dependencies=[Depends(update_user_last_online), Depends(verify_current_user_is_existed)],
+    dependencies=[Depends(update_last_online), Depends(verify_current_user_is_existed)],
 )
 
 
