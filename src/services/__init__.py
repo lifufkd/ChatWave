@@ -1,4 +1,4 @@
-from .authentication import get_access_token, add_user
+from .authentication import get_access_token, create_user
 from .users import (
     fetch_private_user,
     update_user_profile,
@@ -39,6 +39,8 @@ from .messages import (
     fetch_messages_media_paths,
     remove_messages,
     search_conversation_messages,
-    mark_message_delivered
+    mark_message_delivered,
+    parse_bytes_file_range,
+    stream_file
 )
 from .unread_messages import add_unread_messages
