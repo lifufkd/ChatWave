@@ -38,7 +38,6 @@ from .messages import (
     fetch_message_media_metadata,
     fetch_messages_media_paths,
     remove_messages,
-    remove_media_messages,
     search_conversation_messages,
     mark_message_delivered
 )
