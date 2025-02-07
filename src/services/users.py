@@ -12,7 +12,7 @@ from repository import (
     fetch_users_from_db,
     delete_conversation_in_db,
     delete_user_from_db,
-    get_conversation_messages_id, is_user_exists
+    is_user_exists
 )
 from validators import verify_user_is_existed, verify_users_is_existed
 from schemas import (
@@ -26,7 +26,7 @@ from schemas import (
     GetConversationsDB,
     GetUnreadMessages
 )
-from .messages import remove_media_messages, mark_message_delivered
+from .messages import mark_message_delivered
 from .conversations import leave_group
 from storage import FileManager
 from utilities import (
@@ -218,23 +218,14 @@ async def fetch_users_online_status(users_ids: list[int]) -> list[UserOnline]:
     return users_objs
 
 
-async def delete_user_avatar(user_id: int):
-    file_path = await fetch_user_avatar_metadata(user_id=user_id)
-    await FileManager().delete_file(file_path=file_path["file_path"])
-
-
 async def remove_user_account(user_id: int) -> None:
     user_obj = await fetch_user_from_db(user_id=user_id)
     for conversation_obj in user_obj.conversations:
         if conversation_obj.type == ConversationTypes.PRIVATE:
-            messages_ids = await get_conversation_messages_id(conversation_id=conversation_obj.id)
-            await remove_media_messages(user_id=user_id, messages_ids=messages_ids)
-
             await delete_conversation_in_db(conversation_id=conversation_obj.id)
         else:
             await leave_group(user_id=user_id, group_id=conversation_obj.id, delete_messages=True)
 
-    await delete_user_avatar(user_id=user_id)
     await delete_user_from_db(user_id=user_id)
 
 

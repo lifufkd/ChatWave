@@ -14,7 +14,11 @@ from repository import (
     get_filtered_messages,
     get_message,
     get_messages,
-    delete_messages, get_message_status, update_message_status, search_messages, delete_unread_messages
+    delete_messages,
+    get_message_status,
+    update_message_status,
+    search_messages,
+    delete_unread_messages
 )
 from schemas import (
     CreateTextMessageDB,
@@ -208,15 +212,6 @@ async def fetch_messages_media_paths(sender_id: int, messages_ids: list[int]) ->
     return messages_paths
 
 
-async def remove_media_messages(user_id: int, messages_ids: list[int]):
-    file_manager_obj = FileManager()
-    medias_paths = await fetch_messages_media_paths(sender_id=user_id, messages_ids=messages_ids)
-    for media_path in medias_paths:
-        await file_manager_obj.delete_file(file_path=media_path)
-
-
 async def remove_messages(user_id: int, messages_ids: list[int]):
     await validate_user_can_manage_messages(user_id=user_id, messages_ids=messages_ids)
-    await remove_media_messages(user_id=user_id, messages_ids=messages_ids)
-
     await delete_messages(messages_ids=messages_ids)

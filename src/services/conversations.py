@@ -1,7 +1,5 @@
 from pathlib import Path
 
-from dependencies import redis_client
-from .messages import remove_media_messages
 from validators import (
     validate_user_in_conversation,
     validate_user_can_manage_conversation,
@@ -225,25 +223,8 @@ async def remove_group_members(user_id: int, group_id: int, members_data: list[D
     await delete_sender_messages(conversation_id=group_id, members_ids=members_ids_to_delete_messages)
 
 
-async def delete_group_avatar(group_id: int) -> None:
-    if not (await fetch_conversation_type_from_db(conversation_id=group_id)) == ConversationTypes.GROUP:
-        return None
-
-    group_obj = await fetch_conversation_from_db(conversation_id=group_id)
-    filepath = MediaPatches.GROUPS_AVATARS_FOLDER.value / f"{group_obj.avatar_name}"
-    if not (await FileManager().file_exists(file_path=filepath)):
-        return None
-
-    await FileManager().delete_file(file_path=filepath)
-
-
 async def delete_conversation_by_id(user_id: int, conversation_id: int) -> None:
     await validate_user_can_manage_conversation(user_id=user_id, conversation_id=conversation_id)
-
-    await delete_group_avatar(group_id=conversation_id)
-    messages_ids = await get_conversation_messages_id(conversation_id=conversation_id)
-    await remove_media_messages(user_id=user_id, messages_ids=messages_ids)
-
     await delete_conversation_in_db(conversation_id=conversation_id)
 
 
@@ -260,10 +241,6 @@ async def leave_group(user_id: int, group_id: int, delete_messages: bool = False
 
     group_members_quantity = await get_conversation_members_quantity_in_db(conversation_id=group_id)
     if group_members_quantity == 1:
-        await delete_group_avatar(group_id=group_id)
-        messages_ids = await get_conversation_messages_id(conversation_id=group_id)
-        await remove_media_messages(user_id=user_id, messages_ids=messages_ids)
-
         await delete_conversation_in_db(conversation_id=group_id)
     else:
         user_group_role = await get_conversation_member_role_from_db(user_id=user_id, conversation_id=group_id)
@@ -279,9 +256,6 @@ async def leave_group(user_id: int, group_id: int, delete_messages: bool = False
                 )
 
         if delete_messages:
-            messages_ids = await get_sender_conversation_messages_id(sender_id=user_id, conversation_id=group_id)
-            await remove_media_messages(user_id=user_id, messages_ids=messages_ids)
-
             await delete_sender_messages(conversation_id=group_id, members_ids=[user_id])
 
         await delete_conversation_members_in_db(conversation_id=group_id, members_ids=[user_id])
@@ -289,8 +263,4 @@ async def leave_group(user_id: int, group_id: int, delete_messages: bool = False
 
 async def delete_all_messages(user_id: int, conversation_id: int):
     await validate_user_in_chat(user_id=user_id, chat_id=conversation_id)
-
-    messages_ids = await get_conversation_messages_id(conversation_id=conversation_id)
-    await remove_media_messages(user_id=user_id, messages_ids=messages_ids)
-
     await delete_conversation_messages(conversation_id=conversation_id)
