@@ -1,4 +1,6 @@
+from fastapi.responses import StreamingResponse
 from pathlib import Path
+
 from validators import (
     validate_user_in_conversation,
     validate_user_is_message_owner,
@@ -11,13 +13,13 @@ from repository import (
     insert_empty_message,
     insert_media_message,
     update_message,
-    get_filtered_messages,
-    get_message,
-    get_messages,
+    select_filtered_messages,
+    select_message,
+    select_messages,
     delete_messages,
-    get_message_status,
+    select_message_status,
     update_message_status,
-    search_messages,
+    select_messages_by_content,
     delete_unread_messages
 )
 from schemas import (
@@ -50,7 +52,7 @@ async def create_text_message(sender_id: int, conversation_id: int, content: str
         conversation_id=conversation_id,
         message_data=new_message_obj
     )
-    raw_message = await get_message(message_id=new_message_id)
+    raw_message = await select_message(message_id=new_message_id)
     new_message_obj = await sqlalchemy_to_pydantic(
         sqlalchemy_model=raw_message,
         pydantic_model=GetMessage
@@ -105,7 +107,7 @@ async def create_media_message(sender_id: int, conversation_id: int, content_dat
         message_id=message_id,
         message_data=new_message_obj
     )
-    raw_message = await get_message(message_id=message_id)
+    raw_message = await select_message(message_id=message_id)
     new_message_obj = await sqlalchemy_to_pydantic(
         sqlalchemy_model=raw_message,
         pydantic_model=GetMessage
@@ -124,12 +126,12 @@ async def update_user_message(sender_id: int, message_id: int, content: str):
 
 
 async def mark_message_delivered(message_id: int):
-    if (await get_message_status(message_id=message_id)) == MessagesStatus.SENT:
+    if (await select_message_status(message_id=message_id)) == MessagesStatus.SENT:
         await update_message_status(message_id=message_id, status=MessagesStatus.DELIVERED)
 
 
 async def mark_message_read(user_id: int, message_id: int):
-    if (await get_message_status(message_id=message_id)) != MessagesStatus.READ:
+    if (await select_message_status(message_id=message_id)) != MessagesStatus.READ:
         await update_message_status(message_id=message_id, status=MessagesStatus.READ)
         await delete_unread_messages(
             filter_conditions=FilterUnreadMessages(
@@ -142,7 +144,7 @@ async def mark_message_read(user_id: int, message_id: int):
 async def fetch_messages(sender_id: int, conversation_id: int, limit: int, offset: int) -> list[GetMessage]:
     await validate_user_in_conversation(user_id=sender_id, conversation_id=conversation_id)
 
-    raw_messages = await get_filtered_messages(
+    raw_messages = await select_filtered_messages(
         conversation_id=conversation_id,
         limit=limit,
         offset=offset
@@ -162,7 +164,11 @@ async def fetch_messages(sender_id: int, conversation_id: int, limit: int, offse
 async def search_conversation_messages(user_id: int, conversations_id: int, search_query: str, limit: int) -> list[GetMessage]:
     await validate_user_in_conversation(user_id=user_id, conversation_id=conversations_id)
 
-    raw_messages = await search_messages(conversation_id=conversations_id, search_query=search_query, limit=limit)
+    raw_messages = await select_messages_by_content(
+        conversation_id=conversations_id,
+        search_query=search_query,
+        limit=limit
+    )
     messages_objs = await many_sqlalchemy_to_pydantic(
         sqlalchemy_models=raw_messages,
         pydantic_model=GetMessage
@@ -175,10 +181,43 @@ async def search_conversation_messages(user_id: int, conversations_id: int, sear
     return messages_objs
 
 
+async def parse_bytes_file_range(bytes_range: str, file_size: int) -> tuple[int, int]:
+    byte_range = bytes_range.replace('bytes=', '').split('-')
+    start_byte = round(float(byte_range[0]))
+    end_byte = round(float(byte_range[1])) if byte_range[1] else file_size - 1
+
+    return start_byte, end_byte
+
+
+async def stream_file(
+        file_path: Path,
+        file_type: str,
+        file_size: int | None = None,
+        start_byte: int | None = None,
+        end_byte: int | None = None
+) -> StreamingResponse:
+    file_manager = FileManager()
+
+    if start_byte and end_byte:
+        headers = {"Content-Range": f"bytes {start_byte}-{end_byte}/{file_size}", "Accept-Ranges": "bytes"}
+        file_generator_obj = await file_manager.range_file_chunk_generator(
+            file_path=file_path,
+            start_byte=start_byte,
+            end_byte=end_byte
+        )
+        return StreamingResponse(file_generator_obj,
+                                 headers=headers,
+                                 media_type=file_type,
+                                 status_code=206)
+    else:
+        file_generator_obj = await file_manager.file_chunk_generator(file_paths=[file_path])
+        return StreamingResponse(file_generator_obj, media_type=file_type)
+
+
 async def fetch_message_media_metadata(sender_id: int, message_id: int) -> dict[str, any]:
     await validate_user_have_access_to_message(user_id=sender_id, message_id=message_id)
 
-    message_obj = await get_message(message_id=message_id)
+    message_obj = await select_message(message_id=message_id)
     filepath = MediaPatches.MEDIA_MESSAGES_FOLDER.value / f"{message_obj.file_content_name}"
     if not (await FileManager().file_exists(file_path=filepath)):
         raise FileNotFound()
@@ -193,7 +232,7 @@ async def fetch_messages_media_paths(sender_id: int, messages_ids: list[int]) ->
     await validate_user_have_access_to_messages(user_id=sender_id, messages_ids=messages_ids)
 
     messages_paths = list()
-    raw_messages = await get_messages(
+    raw_messages = await select_messages(
         messages_ids=messages_ids
     )
     messages_objs = await many_sqlalchemy_to_pydantic(

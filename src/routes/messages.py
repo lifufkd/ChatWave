@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, status, Query, Body, Header
 from fastapi.responses import StreamingResponse
 from typing import Annotated
 
-from dependencies import verify_token, update_user_last_online
+from dependencies import verify_token, update_last_online
 from utilities import FileRangeError
 from validators import verify_current_user_is_existed
 from storage import FileManager
@@ -10,14 +10,16 @@ from services import (
     update_user_message,
     fetch_message_media_metadata,
     fetch_messages_media_paths,
-    remove_messages
+    remove_messages,
+    parse_bytes_file_range,
+    stream_file
 )
 from schemas import MessagesIds, CreateTextMessage
 
 messages_router = APIRouter(
     prefix="/messages",
     tags=["Messages"],
-    dependencies=[Depends(update_user_last_online), Depends(verify_current_user_is_existed)]
+    dependencies=[Depends(update_last_online), Depends(verify_current_user_is_existed)]
 )
 
 
@@ -27,31 +29,26 @@ async def get_message_media(
         message_id: int,
         range: str | None = Header(None),
 ):
-    file_manager = FileManager()
     metadata = await fetch_message_media_metadata(sender_id=current_user_id, message_id=message_id)
 
     if range:
-        file_size = await file_manager.check_file_size(metadata["file_path"])
-        byte_range = range.replace('bytes=', '').split('-')
-        start_byte = round(float(byte_range[0]))
-        end_byte = round(float(byte_range[1])) if byte_range[1] else file_size - 1
-
+        file_size = await FileManager().check_file_size(metadata["file_path"])
+        start_byte, end_byte = await parse_bytes_file_range(bytes_range=range, file_size=file_size)
         if start_byte > file_size:
             raise FileRangeError()
 
-        headers = {"Content-Range": f"bytes {start_byte}-{end_byte}/{file_size}", "Accept-Ranges": "bytes"}
-        file_generator_obj = await file_manager.range_file_chunk_generator(
+        return await stream_file(
             file_path=metadata["file_path"],
+            file_type=metadata["file_type"],
+            file_size=file_size,
             start_byte=start_byte,
-            end_byte=end_byte
+            end_byte=end_byte,
         )
-        return StreamingResponse(file_generator_obj,
-                                 headers=headers,
-                                 media_type=metadata["file_type"],
-                                 status_code=206)
 
-    file_generator_obj = await file_manager.file_chunk_generator(file_paths=[metadata["file_path"]])
-    return StreamingResponse(file_generator_obj, media_type=metadata["file_type"])
+    return await stream_file(
+        file_path=metadata["file_path"],
+        file_type=metadata["file_type"]
+    )
 
 
 @messages_router.get("/media", status_code=status.HTTP_200_OK)
