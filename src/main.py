@@ -12,7 +12,13 @@ from triggers import (
     setup_unread_messages_changes_trigger,
     setup_unread_messages_changes_listener,
     setup_recipients_change_trigger,
-    setup_recipients_change_listener
+    setup_recipients_change_listener,
+    setup_user_delete_trigger,
+    setup_conversation_delete_trigger,
+    setup_messages_delete_trigger,
+    setup_user_delete_listener,
+    setup_conversation_delete_listener,
+    setup_messages_delete_listener
 )
 from repository import create_tables
 from routes import (
@@ -51,11 +57,16 @@ async def lifespan(_: FastAPI):
     await create_tables()
     await setup_unread_messages_changes_trigger()
     await setup_recipients_change_trigger()
+    await setup_user_delete_trigger()
+    await setup_conversation_delete_trigger()
+    await setup_messages_delete_trigger()
     asyncio.create_task(setup_unread_messages_changes_listener())
     asyncio.create_task(setup_recipients_change_listener())
+    asyncio.create_task(setup_user_delete_listener())
+    asyncio.create_task(setup_conversation_delete_listener())
+    asyncio.create_task(setup_messages_delete_listener())
 
     FileManager.create_folders_structure()
-
     FastAPICache.init(RedisBackend(redis_client), prefix="chatwave-cache")
     yield
 
