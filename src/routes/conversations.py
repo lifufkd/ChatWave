@@ -21,7 +21,8 @@ from services import (
     fetch_messages,
     delete_all_messages,
     create_media_message,
-    create_text_message, add_unread_messages
+    create_text_message,
+    add_unread_messages
 )
 from schemas import (
     CreateGroup,
@@ -236,9 +237,9 @@ async def delete_conversation(
     await delete_conversation_by_id(user_id=current_user_id, conversation_id=conversation_id)
 
 
-@conversations_router.delete("/{chat_id}/messages", status_code=status.HTTP_202_ACCEPTED)
-async def delete_chat_messages(
+@conversations_router.delete("/{conversation_id}/messages", status_code=status.HTTP_202_ACCEPTED)
+async def delete_conversation_messages(
         current_user_id: Annotated[int, Depends(verify_token)],
-        chat_id: int
+        conversation_id: int
 ):
-    await delete_all_messages(user_id=current_user_id, conversation_id=chat_id)
+    await delete_all_messages(user_id=current_user_id, conversation_id=conversation_id)
