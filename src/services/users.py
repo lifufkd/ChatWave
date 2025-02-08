@@ -12,7 +12,8 @@ from repository import (
     select_users,
     delete_conversation,
     delete_user,
-    is_user_exists
+    is_user_exists,
+    select_conversation_member_role
 )
 from validators import verify_user_is_existed, verify_users_is_existed
 from schemas import (
@@ -23,8 +24,9 @@ from schemas import (
     UserOnline,
     Avatar,
     GetConversations,
-    GetConversationsDB,
-    GetUnreadMessages
+    GetConversationsWithMembers,
+    GetUnreadMessages,
+    UserRole
 )
 from .messages import mark_message_delivered
 from .conversations import leave_group
@@ -82,21 +84,30 @@ async def search_users_by_nickname(search_query: str, limit: int | None) -> list
     return users_objs
 
 
-async def fetch_user_conversations(user_id: int) -> list[GetConversationsDB]:
+async def fetch_user_conversations(user_id: int) -> list[GetConversationsWithMembers]:
     result = list()
     raw_user = await select_user(user_id=user_id)
 
     for conversation_obj in raw_user.conversations:
-        members_ids = list()
+        members = list()
 
         for member in conversation_obj.members:
             if member.id == user_id:
                 continue
-            members_ids.append(member.id)
+            member_role_in_group = await select_conversation_member_role(
+                user_id=member.id,
+                conversation_id=conversation_obj.id
+            )
+            members.append(
+                UserRole(
+                    user_id=member.id,
+                    user_role=member_role_in_group
+                )
+            )
 
         part_obj = GetConversations.model_validate(conversation_obj, from_attributes=True)
-        full_obj = GetConversationsDB(
-            members_ids=members_ids,
+        full_obj = GetConversationsWithMembers(
+            members=members,
             **part_obj.model_dump()
         )
         result.append(full_obj)
