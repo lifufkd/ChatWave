@@ -1,8 +1,9 @@
 from datetime import datetime
 from pydantic import BaseModel, Field, field_validator
-
 from typing import Annotated, Optional
-from utilities import ValidateModelNotEmpty, request_limit, ConversationTypes
+
+from .users import UserRole
+from utilities import ValidateModelNotEmpty, request_limit, ConversationTypes, ConversationMemberRoles
 
 
 class ConversationsIds(BaseModel):
@@ -48,8 +49,8 @@ class GetConversations(BaseModel):
     updated_at: Optional[datetime]
 
 
-class GetConversationsDB(GetConversations):
-    members_ids: list[int]
+class GetConversationsWithMembers(GetConversations):
+    members: list["UserRole"]
 
 
 class DeleteGroupMembers(BaseModel):
