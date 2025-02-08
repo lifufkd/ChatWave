@@ -76,5 +76,5 @@ async def validate_user_can_manage_messages(user_id: int, messages_ids: list[int
             raise UserNotInConversation(user_id=user_id, conversation_id=message_obj.conversation_id)
 
         if conversation_type == ConversationTypes.GROUP:
-            if user_role == ConversationMemberRoles.MEMBER:
+            if user_role == ConversationMemberRoles.MEMBER and message_obj.sender_id != user_id:
                 raise AccessDeniedError()
