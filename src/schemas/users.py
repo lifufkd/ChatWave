@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field, field_validator
 from typing import Annotated, Optional
 from datetime import datetime, date
-from utilities import validate_password, request_limit
+from utilities import validate_password, request_limit, ConversationMemberRoles
 
 
 class UsersIds(BaseModel):
@@ -33,15 +33,20 @@ class PublicUser(BaseModel):
     nickname: Annotated[str, Field(min_length=3, max_length=128)]
     birthday: Optional[date]
     bio: Optional[str]
+    avatar_name: Optional[str]
+    avatar_type: Optional[str]
     last_online: Optional[datetime]
     created_at: datetime
 
 
 class PrivateUser(PublicUser):
     username: Annotated[str, Field(min_length=3, max_length=64)]
-    avatar_name: Optional[str]
-    avatar_type: Optional[str]
     updated_at: Optional[datetime]
+
+
+class UserRole(BaseModel):
+    user_id: int
+    user_role: ConversationMemberRoles
 
 
 class UpdateUser(BaseModel):
