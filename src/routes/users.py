@@ -20,7 +20,8 @@ from schemas import (
     Avatar,
     UsersIds,
     UserOnline,
-    GetConversationsDB, GetUnreadMessages
+    GetConversationsWithMembers,
+    GetUnreadMessages
 )
 from dependencies import verify_token, update_last_online, verify_token_ws
 from storage import FileManager
@@ -40,7 +41,8 @@ from services import (
     fetch_user_unread_messages,
     fetch_user_recipients_last_online,
     fetch_users_online_status,
-    user_last_online_listener, unread_messages_listener
+    user_last_online_listener,
+    unread_messages_listener
 )
 
 users_router = APIRouter(
@@ -97,7 +99,7 @@ async def get_users_avatars(
     return StreamingResponse(zip_obj, media_type="application/zip")
 
 
-@users_router.get("/conversations", status_code=status.HTTP_200_OK, response_model=list[GetConversationsDB])
+@users_router.get("/conversations", status_code=status.HTTP_200_OK, response_model=list[GetConversationsWithMembers])
 async def get_current_user_conversations(
         current_user_id: Annotated[int, Depends(verify_token)]
 ):
