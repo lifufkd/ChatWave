@@ -8,7 +8,6 @@ from validators import (
     validate_users_in_same_chat,
     get_conversations_ids_from_user_obj,
     conversation_is_group,
-    validate_user_in_chat,
     verify_user_is_existed
 )
 from repository import (
@@ -27,7 +26,8 @@ from repository import (
     select_conversation_members,
     select_conversation_admin_members,
     update_conversation_member,
-    delete_conversation_messages
+    delete_conversation_messages,
+    delete_unread_messages
 )
 from storage import FileManager
 from utilities import (
@@ -49,7 +49,8 @@ from schemas import (
     CreateEmptyConversation,
     GetConversations,
     Avatar,
-    CreateGroupDB
+    CreateGroupDB,
+    FilterUnreadMessages
 )
 
 
@@ -211,9 +212,15 @@ async def remove_group_members(user_id: int, group_id: int, members_data: list[D
     for member_obj in members_data:
         await verify_user_is_existed(user_id=member_obj.user_id)
         await validate_user_in_conversation(user_id=member_obj.user_id, conversation_id=group_id)
+        await delete_unread_messages(
+            filter_conditions=FilterUnreadMessages(
+                user_id=member_obj.user_id,
+                conversation_id=group_id,
+            )
+        )
+
         if not member_obj.delete_messages:
             continue
-
         members_ids_to_delete_messages.append(member_obj.user_id)
 
     await delete_conversation_members(conversation_id=group_id, members_ids=members_ids)
@@ -252,6 +259,13 @@ async def leave_group(user_id: int, group_id: int, delete_messages: bool = False
                     role=ConversationMemberRoles.ADMIN
                 )
 
+        await delete_unread_messages(
+            filter_conditions=FilterUnreadMessages(
+                user_id=user_id,
+                conversation_id=group_id,
+            )
+        )
+
         if delete_messages:
             await delete_sender_messages(conversation_id=group_id, members_ids=[user_id])
 
@@ -259,5 +273,5 @@ async def leave_group(user_id: int, group_id: int, delete_messages: bool = False
 
 
 async def delete_all_messages(user_id: int, conversation_id: int):
-    await validate_user_in_chat(user_id=user_id, chat_id=conversation_id)
+    await validate_user_can_manage_conversation(user_id=user_id, conversation_id=conversation_id)
     await delete_conversation_messages(conversation_id=conversation_id)
