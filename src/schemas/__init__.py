@@ -7,14 +7,15 @@ from .users import (
     UpdateUserDB,
     Avatar,
     UserOnline,
-    UsersIds
+    UsersIds,
+    UserRole
 )
 from .conversations import (
     CreateGroup,
     EditConversation,
     EditConversationDB,
     GetConversations,
-    GetConversationsDB,
+    GetConversationsWithMembers,
     DeleteGroupMembers,
     ConversationsIds,
     CreateEmptyConversation,
