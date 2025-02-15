@@ -1,4 +1,4 @@
-from .init_db import create_tables, delete_tables
+from .init_db import create_tables, delete_tables, create_schema
 from .users import (
     select_user_by_username,
     insert_user,
