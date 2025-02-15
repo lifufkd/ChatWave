@@ -27,10 +27,10 @@ class JWT:
     def create_token(payload: dict) -> str:
         copied_payload = payload.copy()
         copied_payload.update({'exp': datetime.utcnow() + timedelta(days=jwt_settings.JWT_ACCESS_TOKEN_EXPIRES)})
-        token = jwt.encode(copied_payload, key=jwt_settings.JWT_ALGORITHM, algorithm=jwt_settings.JWT_ALGORITHM)
+        token = jwt.encode(copied_payload, key=jwt_settings.JWT_SECRET_KEY, algorithm=jwt_settings.JWT_ALGORITHM)
         return token
 
     @staticmethod
     def decode_token(token: str) -> dict:
-        payload = jwt.decode(token=token, key=jwt_settings.JWT_ALGORITHM, algorithms=[jwt_settings.JWT_ALGORITHM])
+        payload = jwt.decode(token=token, key=jwt_settings.JWT_SECRET_KEY, algorithms=[jwt_settings.JWT_ALGORITHM])
         return payload
