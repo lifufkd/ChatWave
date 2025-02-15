@@ -1,0 +1,41 @@
+services:
+  app:
+    image: chatwave
+    build: .
+    ports:
+      - "80:8000"
+    volumes:
+      - app_data:/app/data
+    env_file:
+      - ".env"
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - backend
+
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend
+
+  redis:
+    image: redis:alpine
+    volumes:
+      - redis_data:/data
+    networks:
+      - backend
+
+volumes:
+  postgres_data:
+  redis_data:
+  app_data:
+
+networks:
+  backend:

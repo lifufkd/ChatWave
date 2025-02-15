@@ -20,7 +20,7 @@ from triggers import (
     setup_conversation_delete_listener,
     setup_messages_delete_listener
 )
-from repository import create_tables
+from repository import create_tables, create_schema
 from routes import (
     authorization_router,
     users_router,
@@ -54,6 +54,7 @@ from utilities import (
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    await create_schema()
     await create_tables()
     await setup_unread_messages_changes_trigger()
     await setup_recipients_change_trigger()
