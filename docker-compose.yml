@@ -1,6 +1,6 @@
 services:
-  app:
-    image: chatwave
+  chatwave:
+    image: sbrse/chatwave:latest
     build: .
     ports:
       - "80:8000"
