@@ -15,6 +15,11 @@ Modern, Simple and Secure REST API for self-hosted messanger with open source co
 - Instant receipt of unread messages on WebSockets
 - Complete (permanent) deletion of messages
 
+## Future plans
+- Develop a Web frontend for the application
+- Add support for video messages (real-time)
+- Add support for personal and group audio and video calls
+
 ## How to use this app?
 
 At the moment, the frontend has not been created, so you can wait for the official release of the web application or help with this. To help in the development of the project, you can support the repository here:
