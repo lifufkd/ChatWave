@@ -3,7 +3,7 @@ from pydantic import BaseModel, Field, field_validator
 from typing import Annotated, Optional
 
 from .users import UserRole
-from utilities import ValidateModelNotEmpty, request_limit, ConversationTypes, ConversationMemberRoles
+from utilities import ValidateModelNotEmpty, request_limit, ConversationTypes
 
 
 class ConversationsIds(BaseModel):
