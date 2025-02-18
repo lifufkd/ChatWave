@@ -3,11 +3,8 @@ import asyncio
 from fastapi import FastAPI, status
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi_cache import FastAPICache
-from fastapi_cache.backends.redis import RedisBackend
 from contextlib import asynccontextmanager
 
-from dependencies import redis_client
 from triggers import (
     setup_unread_messages_changes_trigger,
     setup_unread_messages_changes_listener,
@@ -68,7 +65,6 @@ async def lifespan(_: FastAPI):
     asyncio.create_task(setup_messages_delete_listener())
 
     FileManager.create_folders_structure()
-    FastAPICache.init(RedisBackend(redis_client), prefix="chatwave-cache")
     yield
 
 app = FastAPI(
