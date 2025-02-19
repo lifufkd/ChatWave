@@ -2,8 +2,9 @@ services:
   chatwave:
     image: sbrse/chatwave:latest
     build: .
+    restart: unless-stopped
     ports:
-      - "80:8000"
+      - "8000:8000"
     volumes:
       - app_data:/app/data
     env_file:
@@ -16,6 +17,7 @@ services:
 
   postgres:
     image: postgres:13
+    restart: unless-stopped
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -27,6 +29,7 @@ services:
 
   redis:
     image: redis:alpine
+    restart: unless-stopped
     volumes:
       - redis_data:/data
     networks:

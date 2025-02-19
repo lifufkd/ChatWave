@@ -1,0 +1,33 @@
+services:
+  traefik:
+    image: traefik:v2.10
+    restart: unless-stopped
+    command:
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--serverstransport.insecureskipverify=true"
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - DOCKER_HOST=tcp://docker:2375
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "traefik_certs:/certs"
+    extra_hosts:
+      - "docker:host-gateway"
+    networks:
+      - backend
+
+  chatwave:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.chatwave.rule=Host(`localhost`)"
+      - "traefik.http.routers.chatwave.entrypoints=websecure"
+      - "traefik.http.routers.chatwave.tls=true"
+      - "traefik.http.services.chatwave-service.loadbalancer.server.port=8000"
+
+volumes:
+  traefik_certs:
