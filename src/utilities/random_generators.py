@@ -14,7 +14,5 @@ def generate_jwt_token() -> str:
     elif not secret_key_env and not secret_key_yaml:
         secret_key = secrets.token_hex(32)
         YamlConfig().add_value(key="JWT_SECRET_KEY", value=secret_key)
-        with open(".env", "a") as f:
-            f.write(f"\nJWT_SECRET_KEY={secret_key}")
 
     return secret_key
