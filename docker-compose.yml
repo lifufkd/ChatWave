@@ -6,9 +6,12 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - app_data:/app/data
+      - app_data:${MEDIA_FOLDER:-/app/data}
     env_file:
       - ".env"
+    environment:
+      - DB_HOST=postgres
+      - REDIS_HOST=redis
     depends_on:
       - postgres
       - redis
@@ -19,9 +22,9 @@ services:
     image: postgres:13
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_DATABASE}
+       - POSTGRES_USER=${DB_USER:-admin}
+       - POSTGRES_PASSWORD=${DB_PASSWORD:-admin}
+       - POSTGRES_DB=${DB_DATABASE:-postgres}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
