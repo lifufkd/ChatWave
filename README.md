@@ -42,18 +42,16 @@ Read this instruction on [project docker](https://hub.docker.com/repository/dock
 
 ## ENV configuration
 
-```
-DB_HOST=<DOMAIN-OR-IP>
-DB_PORT=<PORT>
+``` 
+# Optionaly
+
 DB_USER=<USER>
 DB_PASSWORD=<PASSWORD>
 DB_DATABASE=<DATABASE-NAME>
-REDIS_HOST=<DOMAIN-OR-IP>
-REDIS_PORT=<PORT>
-MEDIA_FOLDER=/app/data
- 
-# Optionaly
 DB_SCHEMA=chatwave
+MEDIA_FOLDER=<PATH>
+REDIS_USER=<USER>
+REDIS_PASSWORD=<PASSWORD>
 REDIS_DATABASE=0
 JWT_SECRET_KEY=09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7 # 256 bit random string
 JWT_ACCESS_TOKEN_EXPIRES=1209600 # Token expire time in seconds
