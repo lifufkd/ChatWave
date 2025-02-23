@@ -5,10 +5,10 @@ from .random_generators import generate_jwt_token
 
 
 class DBSettings(BaseSettings):
-    DB_USER: str
-    DB_PASSWORD: str
+    DB_USER: str = "admin"
+    DB_PASSWORD: str = "admin"
     DB_DATABASE: str = "postgres"
-    DB_HOST: str = "postgres"
+    DB_HOST: str = "localhost"
     DB_PORT: int = 5432
     DB_SCHEMA: str = "chatwave"
 
@@ -29,7 +29,7 @@ class RedisSettings(BaseSettings):
     REDIS_USER: str | None = None
     REDIS_PASSWORD: str | None = None
     REDIS_DATABASE: int = 0
-    REDIS_HOST: str = "redis"
+    REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
 
     @property
@@ -60,7 +60,7 @@ class JWTSettings(BaseSettings):
 
 
 class GenericSettings(BaseSettings):
-    MEDIA_FOLDER: Path
+    MEDIA_FOLDER: Path = Path("/app/data")
     ALLOWED_IMAGE_TYPES: list[str] = [
         "image/jpeg",
         "image/png",
