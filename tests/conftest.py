@@ -1,3 +1,5 @@
+import time
+
 import pytest
 import models # noqa
 from repository import create_schema
@@ -7,10 +9,11 @@ from database import session as session_factory
 
 @pytest.fixture(scope='session', autouse=True)
 async def setup_db():
+    await create_schema()
     async with engine.begin() as connection:
-        await create_schema()
         await connection.run_sync(OrmBase.metadata.create_all)
-        yield
+    yield
+    async with engine.begin() as connection:
         await connection.run_sync(OrmBase.metadata.drop_all)
 
 
