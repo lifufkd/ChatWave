@@ -25,7 +25,7 @@ class DBSettings(BaseSettings):
 
     @property
     def test_sqlalchemy_postgresql_url(self):
-        return f"postgresql+asyncpg://{self.TEST_DB_USER}:{self.TEST_DB_PASSWORD}@{self.TEST_DB_HOST}:{self.TEST_DB_PORT}/{self.DB_DATABASE}"
+        return f"postgresql+psycopg://{self.TEST_DB_USER}:{self.TEST_DB_PASSWORD}@{self.TEST_DB_HOST}:{self.TEST_DB_PORT}/{self.DB_DATABASE}"
 
     @property
     def asyncpg_postgresql_url(self):
