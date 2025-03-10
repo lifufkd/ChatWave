@@ -108,7 +108,7 @@ async def get_current_user_conversations(
 
 
 @users_router.get("/online", status_code=status.HTTP_200_OK, response_model=list[UserOnline])
-async def get_users_last_online_rest(
+async def get_users_last_online(
         current_user_id: Annotated[int, Depends(verify_token)]
 ):
     recipients_ids = await fetch_user_recipients_last_online(user_id=current_user_id)
