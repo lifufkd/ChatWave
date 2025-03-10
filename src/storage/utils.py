@@ -41,7 +41,7 @@ class StorageUtils:
         zip_buffer = BytesIO()
         with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
             for file_path in files_paths:
-                if self.file_exists(file_path=file_path):
+                if await self.file_exists(file_path=file_path):
                     zip_file.write(file_path, arcname=file_path.name)
 
         zip_buffer.seek(0)
