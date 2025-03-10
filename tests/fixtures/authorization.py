@@ -1,18 +1,23 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from conftest import client
 from models import Users
 from factories.users import UserFactory
+from conftest import client
 from utilities import JWT
+from repository.users import delete_user
 
 
-def set_auth_token(client: TestClient, user_id: int) -> TestClient:
+@pytest.fixture(scope='function')
+async def authorized_test_client(client: TestClient):
+    user: Users = await UserFactory()
     access_token = JWT.create_token(
         {
-            "id": user_id,
+            "id": user.id,
         }
     )
     headers = {"Authorization": f"Bearer {access_token}"}
-    client.headers.update(headers)
-    return client
+
+    yield {"headers": headers, "user_id": user.id}
+
+    await delete_user(user.id)
