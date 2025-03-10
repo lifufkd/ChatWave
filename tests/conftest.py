@@ -1,5 +1,6 @@
 import asyncio
 import pytest
+import platform
 from fastapi.testclient import TestClient
 
 import models # noqa
@@ -11,7 +12,8 @@ from main import app
 from factories.users import UserFactory
 
 
-asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+if platform.system() == "Windows":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 
 @pytest.fixture(scope='session', autouse=True)
@@ -36,7 +38,9 @@ def set_session_for_factories(get_db_session):
     UserFactory._meta.sqlalchemy_session = get_db_session
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope='session')
 def client() -> [TestClient, None, None]:
-    return TestClient(app)
+    with TestClient(app) as test_client:
+        yield test_client
+
 
