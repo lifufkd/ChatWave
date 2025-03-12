@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 from models import Users
 from factories.users import UserFactory
 from repository.users import delete_user
-from fixtures.authorization import authorized_test_client
+from fixtures.authorization_fixtures import authorized_test_client
 
 
 @pytest.fixture(scope='function')
