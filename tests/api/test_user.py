@@ -3,8 +3,8 @@ import io
 from fastapi.testclient import TestClient
 from contextlib import nullcontext as does_not_raise
 
-from fixtures.users import create_random_users, create_users, upload_avatar
-from fixtures.authorization import authorized_test_client
+from fixtures.users_fixtures import create_random_users, create_users, upload_avatar
+from fixtures.authorization_fixtures import authorized_test_client
 from utilities import ImageCorrupted, FIleToBig, InvalidFileType, FileNotFound
 
 
