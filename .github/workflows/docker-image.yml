@@ -25,5 +25,5 @@ jobs:
       - name: Build and push image
         run: |
           docker buildx build --platform linux/amd64,linux/arm64 \
-            -t ghcr.io/${{ github.actor }}/chatwave:latest \
+            -t ghcr.io/${{ github.repository_owner }}/chatwave:latest \
             --push .
