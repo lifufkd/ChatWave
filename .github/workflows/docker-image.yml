@@ -9,7 +9,8 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     permissions:
-      packages: write
+        packages: write
+        contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -26,7 +27,3 @@ jobs:
         run: |
           docker push ghcr.io/${{ github.actor }}/chatwave:latest
           docker push ghcr.io/${{ github.actor }}/chatwave:${{ github.sha }}
-
-permissions:
-  packages: write
-  contents: read
