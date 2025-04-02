@@ -2,15 +2,15 @@ name: Publish Docker Image
 
 on:
   push:
-    branches:
-      - main
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
-  build-and-push:
+  build:
+    name: Build Docker image and push to repositories
     runs-on: ubuntu-latest
-    permissions:
-        packages: write
-        contents: read
+    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
