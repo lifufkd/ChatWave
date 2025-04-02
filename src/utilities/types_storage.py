@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Annotated
 from enum import Enum
 
-from utilities import generic_settings
+from .secrets_config import generic_settings
 
 
 datetime_required_type = Annotated[datetime, mapped_column(nullable=False)]
@@ -61,3 +61,9 @@ class MediaPatches(Enum):
     USERS_AVATARS_FOLDER = generic_settings.MEDIA_FOLDER / "users" / "avatars"
     GROUPS_AVATARS_FOLDER = generic_settings.MEDIA_FOLDER / "groups" / "avatars"
     MEDIA_MESSAGES_FOLDER = generic_settings.MEDIA_FOLDER / "messages" / "media"
+
+
+class AppModes(Enum):
+    PRODUCTION = "production"
+    DEVELOPMENT = "development"
+    TESTING = "testing"
