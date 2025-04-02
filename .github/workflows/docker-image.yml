@@ -18,12 +18,11 @@ jobs:
       - name: Log in to GitHub Container Registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: Build and tag Docker image
-        run: |
-          docker build -t ghcr.io/${{ github.actor }}/chatwave:latest .
-          docker tag ghcr.io/${{ github.actor }}/chatwave:latest ghcr.io/${{ github.actor }}/chatwave:${{ github.sha }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
-      - name: Push Docker image
+      - name: Build and push image
         run: |
-          docker push ghcr.io/${{ github.actor }}/chatwave:latest
-          docker push ghcr.io/${{ github.actor }}/chatwave:${{ github.sha }}
+          docker buildx build --platform linux/amd64,linux/arm64 \
+            -t ghcr.io/${{ github.actor }}/chatwave:latest \
+            --push .
