@@ -26,3 +26,7 @@ jobs:
         run: |
           docker push ghcr.io/${{ github.actor }}/chatwave:latest
           docker push ghcr.io/${{ github.actor }}/chatwave:${{ github.sha }}
+
+permissions:
+  packages: write
+  contents: read
