@@ -1,0 +1,28 @@
+name: Publish Docker Image
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Log in to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }}
+
+      - name: Build and tag Docker image
+        run: |
+          docker build -t ghcr.io/${{ github.actor }}/chatwave:latest .
+          docker tag ghcr.io/${{ github.actor }}/chatwave:latest ghcr.io/${{ github.actor }}/chatwave:${{ github.sha }}
+
+      - name: Push Docker image
+        run: |
+          docker push ghcr.io/${{ github.actor }}/chatwave:latest
+          docker push ghcr.io/${{ github.actor }}/chatwave:${{ github.sha }}
