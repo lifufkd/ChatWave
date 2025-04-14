@@ -66,6 +66,7 @@ class JWTSettings(BaseSettings):
 
 class GenericSettings(BaseSettings):
     MODE: str = "production"
+    API_CORS_ALLOW_ORIGINS: list[str] = ["*"]
     MEDIA_FOLDER: Path = Path("/app/data")
     ALLOWED_IMAGE_TYPES: list[str] = [
         "image/jpeg",
