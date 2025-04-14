@@ -1,6 +1,6 @@
 services:
   chatwave:
-    image: sbrse/chatwave:latest
+    image: ghcr.io/lifufkd/chatwave:latest
     build: .
     restart: unless-stopped
     ports:
