@@ -1,6 +1,6 @@
 import asyncio
 
-from fastapi import FastAPI, status
+from fastapi import FastAPI, status, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
@@ -45,7 +45,8 @@ from utilities import (
     MessageNotFound,
     UserNotInConversation,
     FileRangeError,
-    UnreadMessageAlreadyExists
+    UnreadMessageAlreadyExists,
+    generic_settings
 )
 
 
@@ -77,112 +78,110 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=generic_settings.API_CORS_ALLOW_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-@app.exception_handler(Exception)
-async def exception_handler(request, exc: Exception) -> JSONResponse:
-    match exc:
-        case UserNotFoundError():
-            return JSONResponse(
-                status_code=status.HTTP_404_NOT_FOUND,
-                content={"detail": str(exc)}
-            )
-        case ConversationNotFoundError():
-            return JSONResponse(
-                status_code=status.HTTP_404_NOT_FOUND,
-                content={"detail": str(exc)}
-            )
-        case AccessDeniedError():
-            return JSONResponse(
-                status_code=status.HTTP_403_FORBIDDEN,
-                content={"detail": str(exc)}
-            )
-        case IsNotAGroupError():
-            return JSONResponse(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                content={"detail": str(exc)}
-            )
-        case IsNotAChatError():
-            return JSONResponse(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                content={"detail": str(exc)}
-            )
-        case InvalidPasswordError():
-            return JSONResponse(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                content={"detail": str(exc)}
-            )
-        case InvalidCredentials():
-            return JSONResponse(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                content={"detail": str(exc)},
-                headers={"WWW-Authenticate": "Bearer"}
-            )
-        case UserAlreadyExists():
-            return JSONResponse(
-                status_code=status.HTTP_409_CONFLICT,
-                content={"detail": str(exc)},
-            )
-        case InvalidFileType():
-            return JSONResponse(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                content={"detail": str(exc)},
-            )
-        case FIleToBig():
-            return JSONResponse(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                content={"detail": str(exc)},
-            )
-        case ImageCorrupted():
-            return JSONResponse(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                content={"detail": str(exc)},
-            )
-        case ChatAlreadyExists():
-            return JSONResponse(
-                status_code=status.HTTP_409_CONFLICT,
-                content={"detail": str(exc)}
-            )
-        case SameUsersIds():
-            return JSONResponse(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                content={"detail": str(exc)}
-            )
-        case FileNotFound():
-            return JSONResponse(
-                status_code=status.HTTP_404_NOT_FOUND,
-                content={"detail": str(exc)}
-            )
-        case UserAlreadyInConversation():
-            return JSONResponse(
-                status_code=status.HTTP_409_CONFLICT,
-                content={"detail": str(exc)}
-            )
-        case MessageNotFound():
-            return JSONResponse(
-                status_code=status.HTTP_404_NOT_FOUND,
-                content={"detail": str(exc)}
-            )
-        case UserNotInConversation():
-            return JSONResponse(
-                status_code=status.HTTP_404_NOT_FOUND,
-                content={"detail": str(exc)}
-            )
-        case FileRangeError():
-            return JSONResponse(
-                status_code=status.HTTP_416_REQUESTED_RANGE_NOT_SATISFIABLE,
-                content={"detail": str(exc)}
-            )
-        case UnreadMessageAlreadyExists():
-            return JSONResponse(
-                status_code=status.HTTP_409_CONFLICT,
-                content={"detail": str(exc)}
-            )
+@app.exception_handler(UserNotFoundError)
+async def user_not_found_handler(request: Request, exc: UserNotFoundError):
+    return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={"detail": str(exc)})
+
+
+@app.exception_handler(ConversationNotFoundError)
+async def conversation_not_found_handler(request: Request, exc: ConversationNotFoundError):
+    return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={"detail": str(exc)})
+
+
+@app.exception_handler(AccessDeniedError)
+async def access_denied_handler(request: Request, exc: AccessDeniedError):
+    return JSONResponse(status_code=status.HTTP_403_FORBIDDEN, content={"detail": str(exc)})
+
+
+@app.exception_handler(IsNotAGroupError)
+async def not_a_group_handler(request: Request, exc: IsNotAGroupError):
+    return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"detail": str(exc)})
+
+
+@app.exception_handler(IsNotAChatError)
+async def not_a_chat_handler(request: Request, exc: IsNotAChatError):
+    return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"detail": str(exc)})
+
+
+@app.exception_handler(InvalidPasswordError)
+async def invalid_password_handler(request: Request, exc: InvalidPasswordError):
+    return JSONResponse(status_code=status.HTTP_401_UNAUTHORIZED, content={"detail": str(exc)})
+
+
+@app.exception_handler(InvalidCredentials)
+async def invalid_credentials_handler(request: Request, exc: InvalidCredentials):
+    return JSONResponse(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        content={"detail": str(exc)},
+        headers={"WWW-Authenticate": "Bearer"}
+    )
+
+
+@app.exception_handler(UserAlreadyExists)
+async def user_already_exists_handler(request: Request, exc: UserAlreadyExists):
+    return JSONResponse(status_code=status.HTTP_409_CONFLICT, content={"detail": str(exc)})
+
+
+@app.exception_handler(InvalidFileType)
+async def invalid_file_type_handler(request: Request, exc: InvalidFileType):
+    return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"detail": str(exc)})
+
+
+@app.exception_handler(FIleToBig)
+async def file_too_big_handler(request: Request, exc: FIleToBig):
+    return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"detail": str(exc)})
+
+
+@app.exception_handler(ImageCorrupted)
+async def image_corrupted_handler(request: Request, exc: ImageCorrupted):
+    return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"detail": str(exc)})
+
+
+@app.exception_handler(ChatAlreadyExists)
+async def chat_already_exists_handler(request: Request, exc: ChatAlreadyExists):
+    return JSONResponse(status_code=status.HTTP_409_CONFLICT, content={"detail": str(exc)})
+
+
+@app.exception_handler(SameUsersIds)
+async def same_user_ids_handler(request: Request, exc: SameUsersIds):
+    return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={"detail": str(exc)})
+
+
+@app.exception_handler(FileNotFound)
+async def file_not_found_handler(request: Request, exc: FileNotFound):
+    return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={"detail": str(exc)})
+
+
+@app.exception_handler(UserAlreadyInConversation)
+async def user_already_in_conversation_handler(request: Request, exc: UserAlreadyInConversation):
+    return JSONResponse(status_code=status.HTTP_409_CONFLICT, content={"detail": str(exc)})
+
+
+@app.exception_handler(MessageNotFound)
+async def message_not_found_handler(request: Request, exc: MessageNotFound):
+    return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={"detail": str(exc)})
+
+
+@app.exception_handler(UserNotInConversation)
+async def user_not_in_conversation_handler(request: Request, exc: UserNotInConversation):
+    return JSONResponse(status_code=status.HTTP_404_NOT_FOUND, content={"detail": str(exc)})
+
+
+@app.exception_handler(FileRangeError)
+async def file_range_error_handler(request: Request, exc: FileRangeError):
+    return JSONResponse(status_code=status.HTTP_416_REQUESTED_RANGE_NOT_SATISFIABLE, content={"detail": str(exc)})
+
+
+@app.exception_handler(UnreadMessageAlreadyExists)
+async def unread_message_already_exists_handler(request: Request, exc: UnreadMessageAlreadyExists):
+    return JSONResponse(status_code=status.HTTP_409_CONFLICT, content={"detail": str(exc)})
 
 
 app.include_router(authorization_router)
