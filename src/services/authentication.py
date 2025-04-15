@@ -14,7 +14,7 @@ async def get_access_token(username: str, password: str) -> str:
     password_hash = user_data[1]
 
     if not Hash.verify_password(plain_password=password, hashed_password=password_hash):
-        raise InvalidPasswordError()
+        raise UserNotFoundError()
 
     access_token = JWT.create_token(
         {
