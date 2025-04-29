@@ -41,6 +41,7 @@ from .messages import (
     search_conversation_messages,
     mark_message_delivered,
     parse_bytes_file_range,
-    stream_file
+    stream_file,
+    fetch_last_message
 )
 from .unread_messages import add_unread_messages
