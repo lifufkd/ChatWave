@@ -20,7 +20,8 @@ from repository import (
     select_message_status,
     update_message_status,
     select_messages_by_content,
-    delete_unread_messages
+    delete_unread_messages,
+    select_last_message
 )
 from schemas import (
     CreateTextMessageDB,
@@ -35,7 +36,8 @@ from utilities import (
     many_sqlalchemy_to_pydantic,
     sqlalchemy_to_pydantic,
     FileNotFound,
-    MediaPatches
+    MediaPatches,
+    MessageNotFound
 )
 
 
@@ -159,6 +161,21 @@ async def fetch_messages(sender_id: int, conversation_id: int, limit: int, offse
         await mark_message_read(user_id=sender_id, message_id=messages_obj.id)
 
     return messages_objs
+
+
+async def fetch_last_message(sender_id: int, conversation_id: int) -> GetMessage | None:
+    await validate_user_in_conversation(user_id=sender_id, conversation_id=conversation_id)
+
+    raw_message = await select_last_message(conversation_id=conversation_id)
+    if not raw_message:
+        raise MessageNotFound()
+
+    message_obj = await sqlalchemy_to_pydantic(
+        sqlalchemy_model=raw_message,
+        pydantic_model=GetMessage
+    )
+
+    return message_obj
 
 
 async def search_conversation_messages(user_id: int, conversations_id: int, search_query: str, limit: int) -> list[GetMessage]:

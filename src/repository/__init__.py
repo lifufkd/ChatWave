@@ -45,7 +45,8 @@ from .messages import (
     delete_sender_messages,
     select_messages_by_content,
     select_message_status,
-    update_message_status
+    update_message_status,
+    select_last_message
 )
 from .unread_messages import (
     select_unread_messages,

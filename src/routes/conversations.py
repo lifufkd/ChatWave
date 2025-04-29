@@ -22,7 +22,8 @@ from services import (
     delete_all_messages,
     create_media_message,
     create_text_message,
-    add_unread_messages
+    add_unread_messages,
+    fetch_last_message
 )
 from schemas import (
     CreateGroup,
@@ -59,6 +60,18 @@ async def get_messages_from_conversation(
         offset=offset
     )
     return messages_objs
+
+
+@conversations_router.get("/{conversation_id}/messages/last", status_code=status.HTTP_200_OK, response_model=GetMessage)
+async def get_last_message_from_conversation(
+        current_user_id: Annotated[int, Depends(verify_token)],
+        conversation_id: int
+):
+    message_obj = await fetch_last_message(
+        sender_id=current_user_id,
+        conversation_id=conversation_id
+    )
+    return message_obj
 
 
 @conversations_router.get("/{conversation_id}/messages/search", status_code=status.HTTP_200_OK, response_model=list[GetMessage])

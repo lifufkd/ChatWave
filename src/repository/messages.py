@@ -144,6 +144,25 @@ async def select_filtered_messages(conversation_id: int, limit: int, offset: int
         return result
 
 
+async def select_last_message(conversation_id: int) -> Messages:
+    async with session() as cursor:
+        query = (
+            select(Messages)
+            .filter(
+                and_(
+                    Messages.conversation_id == conversation_id,
+                    Messages.status != MessagesStatus.CREATED
+                )
+            )
+            .order_by(Messages.created_at.desc())
+            .limit(1)
+        )
+        result = await cursor.execute(query)
+        result = result.scalar()
+
+        return result
+
+
 async def select_messages_by_content(conversation_id: int, search_query: str, limit: int) -> list[Messages]:
     async with session() as cursor:
         query = (
