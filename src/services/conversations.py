@@ -27,7 +27,8 @@ from repository import (
     select_conversation_admin_members,
     update_conversation_member,
     delete_conversation_messages,
-    delete_unread_messages
+    delete_unread_messages,
+    is_group_avatar_uuid_existed
 )
 from storage import FileManager
 from utilities import (
@@ -39,7 +40,8 @@ from utilities import (
     UserAlreadyInConversation,
     MessagesTypes,
     sqlalchemy_to_pydantic,
-    MediaPatches
+    MediaPatches,
+    generate_uuid
 )
 from schemas import (
     CreateGroup,
@@ -150,7 +152,10 @@ async def upload_group_avatar(user_id: int, group_id: int, avatar_data: Avatar) 
     await validate_user_can_manage_conversation(user_id=user_id, conversation_id=group_id)
     await conversation_is_group(conversation_id=group_id)
 
-    avatar_name = f"{group_id}.{avatar_data.file_name.split('.')[-1]}"
+    avatar_name = generate_uuid()
+    while await is_group_avatar_uuid_existed(avatar_uuid=avatar_name):
+        avatar_name = generate_uuid()
+
     await save_avatar_to_file()
     await update_conversation(
         conversation_id=group_id,
@@ -161,17 +166,15 @@ async def upload_group_avatar(user_id: int, group_id: int, avatar_data: Avatar) 
     )
 
 
-async def fetch_group_avatar_metadata(user_id: int, group_id: int) -> dict[str, any]:
+async def fetch_group_avatar_metadata(user_id: int, group_id: int, avatar_uuid: str) -> dict[str, any]:
     await validate_user_in_group(user_id=user_id, group_id=group_id)
 
-    group_obj = await select_conversation_by_id(conversation_id=group_id)
-    filepath = MediaPatches.GROUPS_AVATARS_FOLDER.value / f"{group_obj.avatar_name}"
+    filepath = MediaPatches.GROUPS_AVATARS_FOLDER.value / avatar_uuid
     if not (await FileManager().file_exists(file_path=filepath)):
         raise FileNotFound()
 
     return {
-        "file_path": filepath,
-        "file_type": group_obj.avatar_type
+        "file_path": filepath
     }
 
 
@@ -192,11 +195,14 @@ async def fetch_group_avatars_paths(user_id: int, conversations_ids: list[int]) 
     return avatars_paths
 
 
-async def remove_group_avatar(user_id: int, group_id: int, avatar_path: Path) -> None:
+async def remove_group_avatar(user_id: int, group_id: int) -> None:
     await validate_user_can_manage_conversation(user_id=user_id, conversation_id=group_id)
     await conversation_is_group(conversation_id=group_id)
 
-    await FileManager().delete_file(file_path=avatar_path)
+    group_data = await select_conversation_by_id(conversation_id=group_id)
+    avatar_path = await fetch_group_avatar_metadata(user_id=user_id, group_id=group_id, avatar_uuid=group_data.avatar_name)
+
+    await FileManager().delete_file(file_path=avatar_path["file_path"])
     await delete_conversation_avatar(conversation_id=group_id)
 
 

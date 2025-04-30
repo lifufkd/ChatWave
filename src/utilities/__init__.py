@@ -1,6 +1,6 @@
 from .secrets_config import redis_settings, db_settings, jwt_settings, generic_settings
 from .config import YamlConfig
-from .random_generators import generate_jwt_token
+from .random_generators import generate_jwt_token, generate_uuid
 from .types_storage import (
     datetime_required_type,
     datetime_auto_set,

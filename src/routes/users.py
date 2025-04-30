@@ -82,12 +82,12 @@ async def search_users(
     return users_objects
 
 
-@anonymous_users_router.get("/{user_id}/avatar", status_code=status.HTTP_200_OK)
+@anonymous_users_router.get("/avatar/{avatar_uuid}", status_code=status.HTTP_200_OK)
 async def get_user_avatar(
-        user_id: int
+        avatar_uuid: str
 ):
-    metadata = await fetch_user_avatar_metadata(user_id=user_id)
-    return StreamingResponse(metadata["file_path"].open("rb"), media_type=metadata["file_type"])
+    metadata = await fetch_user_avatar_metadata(avatar_uuid=avatar_uuid)
+    return StreamingResponse(metadata["file_path"].open("rb"))
 
 
 @anonymous_users_router.get("/avatars", status_code=status.HTTP_200_OK)
@@ -179,11 +179,7 @@ async def update_current_user(
 async def delete_current_user_avatar(
         current_user_id: Annotated[int, Depends(verify_token)]
 ):
-    metadata = await fetch_user_avatar_metadata(user_id=current_user_id)
-    await remove_user_avatar(
-        user_id=current_user_id,
-        avatar_path=metadata["file_path"]
-    )
+    await remove_user_avatar(user_id=current_user_id)
 
 
 @users_router.delete("/conversations/{group_id}", status_code=status.HTTP_202_ACCEPTED)

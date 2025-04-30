@@ -10,7 +10,8 @@ from .users import (
     update_user_last_online,
     is_user_exists,
     delete_user_avatar,
-    delete_user
+    delete_user,
+    is_user_avatar_uuid_existed
 )
 from .conversations import (
     select_conversation,
@@ -20,7 +21,8 @@ from .conversations import (
     is_conversation_exists,
     select_conversation_type,
     delete_conversation_avatar,
-    delete_conversation
+    delete_conversation,
+    is_group_avatar_uuid_existed
 )
 from .conversations_members import (
     insert_members_to_conversation,

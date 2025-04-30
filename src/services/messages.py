@@ -95,7 +95,7 @@ async def create_media_message(sender_id: int, conversation_id: int, content_dat
 
     message_type = await get_message_type()
     message_id = await insert_empty_message(sender_id=sender_id, conversation_id=conversation_id)
-    file_name = f"{message_id}.{content_data.file_name.split('.')[-1]}"
+    file_name = str(message_id)
     new_message_obj = CreateMediaMessageDB(
         file_content_name=file_name,
         file_content_type=content_data.file_type,
