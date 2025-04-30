@@ -100,3 +100,16 @@ async def delete_conversation(conversation_id: int) -> None:
         )
         await cursor.execute(query)
         await cursor.commit()
+
+
+async def is_group_avatar_uuid_existed(avatar_uuid: str) -> bool:
+    async with session() as cursor:
+        query = (
+            select(Conversations.id)
+            .filter_by(avatar_name=avatar_uuid)
+        )
+        result = await cursor.execute(query)
+        if result.first():
+            return True
+
+        return False

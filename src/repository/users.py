@@ -152,3 +152,16 @@ async def delete_user(user_id: int) -> None:
         )
         await cursor.execute(query)
         await cursor.commit()
+
+
+async def is_user_avatar_uuid_existed(avatar_uuid: str) -> bool:
+    async with session() as cursor:
+        query = (
+            select(Users.id)
+            .filter_by(avatar_name=avatar_uuid)
+        )
+        result = await cursor.execute(query)
+        if result.first():
+            return True
+
+        return False

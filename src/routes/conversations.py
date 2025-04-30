@@ -90,13 +90,14 @@ async def search_messages_in_conversation(
     return messages_objs
 
 
-@conversations_router.get("/{group_id}/avatar", status_code=status.HTTP_200_OK)
+@conversations_router.get("/{group_id}/avatar/{avatar_uuid}", status_code=status.HTTP_200_OK)
 async def get_group_avatar(
         current_user_id: Annotated[int, Depends(verify_token)],
-        group_id: int
+        group_id: int,
+        avatar_uuid: str
 ):
-    metadata = await fetch_group_avatar_metadata(user_id=current_user_id, group_id=group_id)
-    return StreamingResponse(metadata["file_path"].open("rb"), media_type=metadata["file_type"])
+    metadata = await fetch_group_avatar_metadata(user_id=current_user_id, group_id=group_id, avatar_uuid=avatar_uuid)
+    return StreamingResponse(metadata["file_path"].open("rb"))
 
 
 @conversations_router.get("/avatars", status_code=status.HTTP_200_OK)
@@ -221,11 +222,9 @@ async def delete_group_avatar(
         current_user_id: Annotated[int, Depends(verify_token)],
         group_id: int
 ):
-    metadata = await fetch_group_avatar_metadata(user_id=current_user_id, group_id=group_id)
     await remove_group_avatar(
         user_id=current_user_id,
-        group_id=group_id,
-        avatar_path=metadata["file_path"]
+        group_id=group_id
     )
 
 

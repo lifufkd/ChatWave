@@ -13,7 +13,8 @@ from repository import (
     delete_conversation,
     delete_user,
     is_user_exists,
-    select_conversation_member_role
+    select_conversation_member_role,
+    is_user_avatar_uuid_existed
 )
 from validators import verify_user_is_existed, verify_users_is_existed
 from schemas import (
@@ -38,7 +39,8 @@ from utilities import (
     FileNotFound,
     MessagesTypes,
     ConversationTypes,
-    MediaPatches
+    MediaPatches,
+    generate_uuid
 )
 
 
@@ -144,7 +146,10 @@ async def upload_user_avatar(user_id: int, avatar_data: Avatar) -> None:
         avatar_save_path = MediaPatches.USERS_AVATARS_FOLDER.value / avatar_name
         await FileManager().write_file(file_path=avatar_save_path, file_data=avatar_data.file)
 
-    avatar_name = f"{user_id}.{avatar_data.file_name.split('.')[-1]}"
+    avatar_name = generate_uuid()
+    while await is_user_avatar_uuid_existed(avatar_uuid=avatar_name):
+        avatar_name = generate_uuid()
+
     await save_avatar_to_file()
     await update_user(
         user_id=user_id,
@@ -155,17 +160,13 @@ async def upload_user_avatar(user_id: int, avatar_data: Avatar) -> None:
     )
 
 
-async def fetch_user_avatar_metadata(user_id: int) -> dict[str, any]:
-    await verify_user_is_existed(user_id=user_id)
-
-    user_obj = await fetch_private_user(user_id=user_id)
-    filepath = MediaPatches.USERS_AVATARS_FOLDER.value / f"{user_obj.avatar_name}"
+async def fetch_user_avatar_metadata(avatar_uuid: str) -> dict[str, any]:
+    filepath = MediaPatches.USERS_AVATARS_FOLDER.value / avatar_uuid
     if not await FileManager().file_exists(file_path=filepath):
         raise FileNotFound()
 
     return {
-        "file_path": filepath,
-        "file_type": user_obj.avatar_type
+        "file_path": filepath
     }
 
 
@@ -197,9 +198,12 @@ async def fetch_user_unread_messages(user_id: int) -> list[GetUnreadMessages]:
     return unread_messages_objs
 
 
-async def remove_user_avatar(user_id: int, avatar_path: Path) -> None:
+async def remove_user_avatar(user_id: int) -> None:
+    user_data = await fetch_private_user(user_id=user_id)
+    metadata = await fetch_user_avatar_metadata(avatar_uuid=user_data.avatar_name)
+
     await delete_user_avatar(user_id=user_id)
-    await FileManager().delete_file(file_path=avatar_path)
+    await FileManager().delete_file(file_path=metadata["file_path"])
 
 
 async def fetch_user_recipients_last_online(user_id: int) -> list[int]:

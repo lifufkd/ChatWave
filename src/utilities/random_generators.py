@@ -1,4 +1,5 @@
 import secrets
+import uuid
 import os
 
 from .config import YamlConfig
@@ -16,3 +17,7 @@ def generate_jwt_token() -> str:
         YamlConfig().add_value(key="JWT_SECRET_KEY", value=secret_key)
 
     return secret_key
+
+
+def generate_uuid():
+    return str(uuid.uuid4())
