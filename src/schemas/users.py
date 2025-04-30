@@ -53,7 +53,7 @@ class UpdateUser(BaseModel):
     nickname: Annotated[Optional[str], Field(None, min_length=3, max_length=128)]
     password: Annotated[Optional[str], Field(None, min_length=8, max_length=128)]
     birthday: Annotated[Optional[date], Field(None)]
-    bio: Annotated[Optional[str], Field(None)]
+    bio: Annotated[Optional[str], Field(None, max_length=8192)]
 
     @field_validator('password')
     def validate_password(cls, value):
@@ -64,7 +64,7 @@ class UpdateUserDB(BaseModel):
     nickname: Annotated[Optional[str], Field(None, min_length=3, max_length=128)]
     password_hash: Annotated[Optional[str], Field(None)]
     birthday: Annotated[Optional[date], Field(None)]
-    bio: Annotated[Optional[str], Field(None)]
+    bio: Annotated[Optional[str], Field(None, max_length=8192)]
     avatar_name: Annotated[Optional[str], Field(None)]
     avatar_type: Annotated[Optional[str], Field(None)]
 

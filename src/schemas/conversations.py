@@ -21,7 +21,7 @@ class CreateEmptyConversation(BaseModel):
 
 class CreateGroup(BaseModel):
     name: Annotated[str, Field(min_length=1, max_length=64)]
-    description: Annotated[Optional[str], Field(None)]
+    description: Annotated[Optional[str], Field(None, max_length=256)]
 
 
 class CreateGroupDB(CreateEmptyConversation, CreateGroup):
@@ -30,7 +30,7 @@ class CreateGroupDB(CreateEmptyConversation, CreateGroup):
 
 class EditConversation(ValidateModelNotEmpty):
     name: Annotated[Optional[str], Field(None, min_length=1, max_length=64)]
-    description: Annotated[Optional[str], Field(None)]
+    description: Annotated[Optional[str], Field(None, max_length=256)]
 
 
 class EditConversationDB(EditConversation):
