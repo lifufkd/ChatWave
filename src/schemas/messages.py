@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Annotated, Optional
 from pydantic import BaseModel, Field, field_validator
 from datetime import datetime
 
@@ -14,7 +14,7 @@ class MessagesIds(BaseModel):
 
 
 class CreateTextMessage(BaseModel):
-    content: str = Field()
+    content: str = Field(max_length=8192)
 
 
 class CreateTextMessageDB(BaseModel):
@@ -27,7 +27,7 @@ class CreateMediaMessage(BaseModel):
     file: bytes
     file_name: str
     file_type: str
-    caption: Optional[str]
+    caption: Annotated[Optional[str], Field(max_length=8192)]
     is_voice_message: bool
 
 
@@ -36,7 +36,7 @@ class CreateMediaMessageDB(BaseModel):
     file_content_type: str
     status: MessagesStatus
     type: MessagesTypes
-    content: Optional[str]
+    content: Annotated[Optional[str], Field(max_length=8192)]
 
 
 class GetMessage(BaseModel):

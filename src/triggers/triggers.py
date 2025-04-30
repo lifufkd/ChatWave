@@ -10,13 +10,17 @@ async def setup_unread_messages_changes_trigger():
             text("""
                 CREATE OR REPLACE FUNCTION unread_messages_changes()
                 RETURNS TRIGGER AS $$
+                DECLARE
+                    user_id INTEGER;
                 BEGIN
                     IF TG_OP = 'INSERT' THEN
-                        PERFORM pg_notify('unread_messages_changes', row_to_json(NEW)::text);
+                        user_id := NEW.user_id;
+                        PERFORM pg_notify('unread_messages_changes', user_id::text);
                     END IF;
 
                     IF TG_OP = 'DELETE' THEN
-                        PERFORM pg_notify('unread_messages_changes', row_to_json(OLD)::text);
+                        user_id := OLD.user_id;
+                        PERFORM pg_notify('unread_messages_changes', user_id::text);
                     END IF;
 
                     RETURN NULL;
@@ -47,13 +51,23 @@ async def setup_recipients_change_trigger():
                 RETURNS TRIGGER AS $$
                 BEGIN
                     IF TG_OP = 'INSERT' THEN
-                        PERFORM pg_notify('recipients_change', row_to_json(NEW)::text);
+                        PERFORM pg_notify(
+                            'recipients_change',
+                            json_build_object(
+                                'user_id', NEW.user_id,
+                                'conversation_id', NEW.conversation_id
+                            )::text
+                        );
+                    ELSIF TG_OP = 'DELETE' THEN
+                        PERFORM pg_notify(
+                            'recipients_change',
+                            json_build_object(
+                                'user_id', OLD.user_id,
+                                'conversation_id', OLD.conversation_id
+                            )::text
+                        );
                     END IF;
-
-                    IF TG_OP = 'DELETE' THEN
-                        PERFORM pg_notify('recipients_change', row_to_json(OLD)::text);
-                    END IF;
-
+                
                     RETURN NULL;
                 END;
                 $$ LANGUAGE plpgsql;
@@ -80,9 +94,12 @@ async def setup_user_delete_trigger():
             text("""
                 CREATE OR REPLACE FUNCTION user_delete()
                 RETURNS TRIGGER AS $$
+                DECLARE
+                    avatar_name TEXT;
                 BEGIN
                     IF TG_OP = 'DELETE' THEN
-                        PERFORM pg_notify('user_delete', row_to_json(OLD)::text);
+                        avatar_name := OLD.avatar_name;
+                        PERFORM pg_notify('user_delete', avatar_name::text);
                     END IF;
 
                     RETURN NULL;
@@ -111,9 +128,12 @@ async def setup_conversation_delete_trigger():
             text("""
                 CREATE OR REPLACE FUNCTION conversation_delete()
                 RETURNS TRIGGER AS $$
+                DECLARE
+                    avatar_name TEXT;
                 BEGIN
                     IF TG_OP = 'DELETE' THEN
-                        PERFORM pg_notify('conversation_delete', row_to_json(OLD)::text);
+                        avatar_name := OLD.avatar_name;
+                        PERFORM pg_notify('conversation_delete', avatar_name::text);
                     END IF;
 
                     RETURN NULL;
@@ -142,9 +162,12 @@ async def setup_messages_delete_trigger():
             text("""
                 CREATE OR REPLACE FUNCTION messages_delete()
                 RETURNS TRIGGER AS $$
+                DECLARE
+                    file_content_name TEXT;
                 BEGIN
                     IF TG_OP = 'DELETE' THEN
-                        PERFORM pg_notify('messages_delete', row_to_json(OLD)::text);
+                        file_content_name := OLD.file_content_name;
+                        PERFORM pg_notify('messages_delete', file_content_name::text);
                     END IF;
 
                     RETURN NULL;
