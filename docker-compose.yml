@@ -18,6 +18,20 @@ services:
     networks:
       - backend
 
+  web:
+    image: ghcr.io/lifufkd/chatwave-web:latest
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    env_file:
+      - ".env"
+    environment:
+      - API_URL=chatwave
+    depends_on:
+      - chatwave
+    networks:
+      - backend
+
   postgres:
     image: postgres:13
     restart: unless-stopped
