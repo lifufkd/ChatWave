@@ -26,7 +26,7 @@ services:
     env_file:
       - ".env"
     environment:
-      - API_URL=chatwave
+      - API_URL=http://chatwave
     depends_on:
       - chatwave
     networks:
