@@ -5,9 +5,7 @@
   <img src="assets/logo-dark.svg" alt="ChatWave logo" width="200"/>
 </p>
 
-<h1 align="center">ChatWave</h1>
-
-## 🌊 What is ChatWave?
+# 💬 ChatWave Web
 
 **ChatWave** is a modern, simple, and secure REST API for a self-hosted messenger — open source and licensed under **GPLv3**.  
 This repository contains only the **backend**, built with **Python 3.11** and **FastAPI**.
