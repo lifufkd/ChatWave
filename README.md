@@ -2,7 +2,7 @@
 [🇷🇺 Русский](README/readme.ru.md) | [🇬🇧 English](README.md)
 
 <p align="center">
-  <img src="assets/logo-light.svg" alt="ChatWave logo" width="200"/>
+  <img src="assets/logo-dark.svg" alt="ChatWave logo" width="200"/>
 </p>
 
 <h1 align="center">ChatWave</h1>
