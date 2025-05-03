@@ -1,35 +1,36 @@
+<!-- Language switch -->
+[🇷🇺 Русский](README/readme.ru.md) | [🇬🇧 English](README.md)
+
 <p align="center">
-  <img src="assets/chatwave_logo_2.png" alt="ChatWave logo">
+  <img src="assets/chatwave_logo_2.png" alt="ChatWave logo" width="200"/>
 </p>
 
-## What is ChatWave?
-Modern, Simple and Secure REST API for self-hosted messanger with open source code and GPLv3 license! This repository contains only the backend written on python 3.11 and FastAPI.
+<h1 align="center">ChatWave</h1>
 
-## Features
-- Self-hosted backend
-- Secure authorization (Bearer HS256), data transport (TLSv3), DB password hashing
-- Account's profile managing
-- Personal chats
-- Group chats
-- Media messages support, including voice
-- Instant receipt of unread messages on WebSockets
-- Complete (permanent) deletion of messages
+## 🌊 What is ChatWave?
 
-## Future plans
-- Develop a Web frontend for the application
-- Add support for video messages (real-time)
-- Add support for personal and group audio and video calls
+**ChatWave** is a modern, simple, and secure REST API for a self-hosted messenger — open source and licensed under **GPLv3**.  
+This repository contains only the **backend**, built with **Python 3.11** and **FastAPI**.
 
-## How to use this app?
+## ✨ Features
 
-At the moment, the frontend has not been created, so you can wait for the official release of the web application or help with this. To help in the development of the project, you can support the repository here:
+- 🏠 Self-hosted backend
+- 🔐 Secure auth (JWT Bearer HS256), TLSv3, password hashing
+- 👤 Account & profile management
+- 💬 Personal & group chats
+- 🎙️ Media messages (voice, images, files)
+- ⚡ Real-time message updates via WebSocket
+- 🧹 Permanent deletion of messages
 
-- https://github.com/lifufkd/ChatWave
-- https://hub.docker.com/repository/docker/sbrse/chatwave
+## 🛣️ Roadmap
 
-## How to install this app?
+- 🌐 Web frontend (in development: [chatwave-web](https://github.com/lifufkd/chatwave-web))
+- 🎥 Video messages (real-time)
+- 📞 Audio & video calls (1-on-1 and group)
 
-1. **From source code**: 
+## 🚀 Getting Started
+
+### 🧑‍💻 1. Run from source
 ```
 git clone https://github.com/lifufkd/ChatWave
 pip install -r requirements.txt
@@ -37,10 +38,11 @@ cd ./src
 nano .env (Fill in the env file according to the section "ENV configuration")
 uvicorn main:app --host 0.0.0.0 --port 8000
 ```
-2. **Docker**: 
+
+### 🐳 2. Run with Docker
 Read this instruction on [project docker](https://hub.docker.com/repository/docker/sbrse/chatwave) page
 
-## ENV configuration
+## ⚙️ ENV Configuration
 
 ```
 DB_HOST=<DOMAIN-OR-IP>
@@ -68,5 +70,10 @@ MAX_UPLOAD_FILE_SIZE=16384 # Decimal value in MB
 MAX_ITEMS_PER_REQUEST=100 # Decimal value
 ```
 
-## License
-View [license information⁠](https://github.com/lifufkd/ChatWave/blob/main/LICENSE) for the software contained in this image.
+## ❤️ Contributing
+
+You can help by testing, opening issues, or contributing code.
+Also check out our frontend repo ChatWave Web
+
+## 📜 License
+Distributed under the GPLv3 License. See [LICENSE⁠](https://github.com/lifufkd/ChatWave/blob/main/LICENSE) for more information.
