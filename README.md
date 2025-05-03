@@ -31,7 +31,8 @@ This repository contains only the **backend**, built with **Python 3.11** and **
 ## 🚀 Getting Started
 
 ### 🧑‍💻 1. Run from source
-```
+
+```bash
 git clone https://github.com/lifufkd/ChatWave
 pip install -r requirements.txt
 cd ./src
@@ -73,7 +74,7 @@ MAX_ITEMS_PER_REQUEST=100 # Decimal value
 ## ❤️ Contributing
 
 You can help by testing, opening issues, or contributing code.
-Also check out our frontend repo ChatWave Web
+Also check out our frontend repo [ChatWave Web](https://github.com/lifufkd/chatwave-web)
 
 ## 📜 License
-Distributed under the GPLv3 License. See [LICENSE⁠](https://github.com/lifufkd/ChatWave/blob/main/LICENSE) for more information.
+Distributed under the GPLv3 License. See [LICENSE](https://github.com/lifufkd/ChatWave/blob/main/LICENSE) for more information.
