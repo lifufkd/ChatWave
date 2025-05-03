@@ -4,12 +4,10 @@
 [🇷🇺 Русский](readme.ru.md) | [🇬🇧 English](../README.md)
 
 <p align="center">
-  <img src="../assets/chatwave_logo_2.png" alt="ChatWave logo" width="200"/>
+  <img src="../assets/logo-dark.svg" alt="ChatWave logo" width="200"/>
 </p>
 
-<h1 align="center">ChatWave</h1>
-
-## 🌊 Что такое ChatWave?
+# 💬 ChatWave Web
 
 **ChatWave** — это REST API мессенджера с открытым исходным кодом и лицензией **GPLv3**.  
 Репозиторий содержит только **backend**, написанный на **Python 3.11** с использованием **FastAPI**.
