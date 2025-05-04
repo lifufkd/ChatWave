@@ -11,9 +11,16 @@ http {
     keepalive_timeout  65;
 
     server {
-        listen 80;
-        ${SSL_REDIRECT_OR_PROXY}
-    }
+        listen 443 ssl;
+        server_name localhost;
 
-    ${SSL_SERVER_BLOCK}
+        ssl_certificate     $SSL_CERT_PATH;
+        ssl_certificate_key $SSL_CERT_KEY;
+
+        location / {
+            proxy_pass http://chatwave:8000;
+            proxy_set_header Host \$host;
+            proxy_set_header X-Real-IP \$remote_addr;
+        }
+    }
 }
