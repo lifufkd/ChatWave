@@ -5,6 +5,13 @@
   <img src="assets/logo-dark.svg" alt="ChatWave logo" width="200"/>
 </p>
 
+<p align="center">
+  🔗 <a href="http://193.23.197.198/authorization/signin.html" target="_blank"><strong>Try the Live Demo</strong></a>  
+  <br/>
+  <code>Login:</code> <strong>demo</strong> &nbsp;•&nbsp; <code>Password:</code> <strong>Demodemo123</strong>
+</p>
+
+
 # 💬 ChatWave
 
 **ChatWave** is a modern, simple, and secure REST API for a self-hosted messenger — open source and licensed under **GPLv3**.  
@@ -80,6 +87,7 @@ DB_PASSWORD=<PASSWORD>
 REDIS_HOST=<DOMAIN-OR-IP>
 
 # Required for HTTPS (ssl)
+SSL_CERTS_FOLDER=<PATH_TO_FOLDER_WITH_CERTS>
 SSL_CERT_PATH=/cert/cert.pem
 SSL_CERT_KEY=/cert/cert.key
  
