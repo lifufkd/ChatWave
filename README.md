@@ -22,7 +22,7 @@ This repository contains only the **backend**, built with **Python 3.11** and **
 
 ## 🛣️ Roadmap
 
-- 🌐 Web frontend (in development: [chatwave-web](https://github.com/lifufkd/chatwave-web))
+- 🌐 Web frontend (already available, but still in active development: [chatwave-web](https://github.com/lifufkd/chatwave-web))
 - 🎥 Video messages (real-time)
 - 📞 Audio & video calls (1-on-1 and group)
 
@@ -39,16 +39,49 @@ uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
 ### 🐳 2. Run with Docker
-Read this instruction on [project docker](https://hub.docker.com/repository/docker/sbrse/chatwave) page
+
+### 1. Standalone 
+```bash
+docker run \
+--name chatwave \
+-d \
+-p 8080:8000 \
+-v <PATH_TO_MEDIA_FOLDER>:/app/data \
+--env-file <PATH-TO-ENV> \
+ghcr.io/lifufkd/chatwave:latest
+```
+### 2. All in one
+
+#### 1. HTTP (no ssl)
+```bash
+git clone https://github.com/lifufkd/ChatWave
+cd ChatWave
+docker-compose up -d
+```
+
+
+#### 2. HTTPS (ssl)
+```bash
+git clone https://github.com/lifufkd/ChatWave
+cd ChatWave
+docker-compose -f docker-compose.nginx.yml up -d
+```
 
 ## ⚙️ ENV Configuration
 
 ```
+# Required
+MEDIA_FOLDER=<PATH> # Must be same in run command (-v chatwave_appdata:/app/data)
+
+# Required for "Standalone" installation method
 DB_HOST=<DOMAIN-OR-IP>
 DB_USER=<USER>
 DB_PASSWORD=<PASSWORD>
 REDIS_HOST=<DOMAIN-OR-IP>
-MEDIA_FOLDER=<PATH> # Must be same in run command (-v chatwave_appdata:/app/data)
+
+# Required for HTTPS (ssl)
+SSL_CERT_PATH=/cert/cert.pem
+SSL_CERT_KEY=/cert/cert.key
  
 # Optionaly
 DB_DATABASE=<DATABASE-NAME>
