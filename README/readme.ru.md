@@ -37,13 +37,22 @@
 
 ### 🧑‍💻 1. Запуск из исходников
 
+#### 1. Скачайте docker образ:
+
+```
+docker pull ghcr.io/lifufkd/chatwave:latest
+```
+
+#### 2. Запустите с необходимыми переменными окружения:
+
 ```bash
-git clone https://github.com/lifufkd/ChatWave
-cd ChatWave
-pip install -r requirements.txt
-cd ./src
-nano .env  # Заполните согласно "Конфигурация окружения"
-uvicorn main:app --host 0.0.0.0 --port 8000
+docker run \
+--name chatwave \
+-d \
+-p 8080:8000 \
+-v <PATH_TO_MEDIA_FOLDER>:/app/data \
+--env-file <PATH-TO-ENV> \
+ghcr.io/lifufkd/chatwave:latest
 ```
 
 ### 🐳 2. Запуск в докер
