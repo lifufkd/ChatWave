@@ -7,6 +7,12 @@
   <img src="../assets/logo-dark.svg" alt="ChatWave logo" width="200"/>
 </p>
 
+<p align="center">
+  🔗 <a href="http://193.23.197.198/authorization/signin.html" target="_blank"><strong>Попробуйте демо версию!</strong></a>  
+  <br/>
+  <code>Логин:</code> <strong>demo</strong> &nbsp;•&nbsp; <code>Пароль:</code> <strong>Demodemo123</strong>
+</p>
+
 # 💬 ChatWave
 
 **ChatWave** — это REST API мессенджера с открытым исходным кодом и лицензией **GPLv3**. Репозиторий содержит только **backend**, написанный на **Python 3.11** с использованием **FastAPI**.
@@ -40,17 +46,51 @@ nano .env  # Заполните согласно "Конфигурация ок�
 uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
-### 🐳 2. Запуск через Docker
-Подробности смотрите на [странице](https://hub.docker.com/repository/docker/sbrse/chatwave) Docker Hub
+### 🐳 2. Запуск в докер
+
+### 1. Docker
+```bash
+docker run \
+--name chatwave \
+-d \
+-p 8080:8000 \
+-v <PATH_TO_MEDIA_FOLDER>:/app/data \
+--env-file <PATH-TO-ENV> \
+ghcr.io/lifufkd/chatwave:latest
+```
+### 2. Docker-compose
+
+#### 1. HTTP (no ssl)
+```bash
+git clone https://github.com/lifufkd/ChatWave
+cd ChatWave
+docker-compose up -d
+```
+
+
+#### 2. HTTPS (ssl)
+```bash
+git clone https://github.com/lifufkd/ChatWave
+cd ChatWave
+docker-compose -f docker-compose.nginx.yml up -d
+```
 
 ## ⚙️ Конфигурация .env
 
 ```
+# Required
+MEDIA_FOLDER=<PATH> # Must be same in run command (-v chatwave_appdata:/app/data)
+
+# Required for "Standalone" installation method
 DB_HOST=<DOMAIN-OR-IP>
 DB_USER=<USER>
 DB_PASSWORD=<PASSWORD>
 REDIS_HOST=<DOMAIN-OR-IP>
-MEDIA_FOLDER=<PATH> # Must be same in run command (-v chatwave_appdata:/app/data)
+
+# Required for HTTPS (ssl)
+SSL_CERTS_FOLDER=<PATH_TO_FOLDER_WITH_CERTS>
+SSL_CERT_PATH=/cert/cert.pem
+SSL_CERT_KEY=/cert/cert.key
  
 # Optionaly
 DB_DATABASE=<DATABASE-NAME>
