@@ -48,6 +48,15 @@ uvicorn main:app --host 0.0.0.0 --port 8000
 ### 🐳 2. Run with Docker
 
 ### 1. Standalone 
+
+#### 1. Download the docker image:
+
+```
+docker pull ghcr.io/lifufkd/chatwave:latest
+```
+
+#### 2. Run with the necessary environment variables:
+
 ```bash
 docker run \
 --name chatwave \
@@ -57,6 +66,7 @@ docker run \
 --env-file <PATH-TO-ENV> \
 ghcr.io/lifufkd/chatwave:latest
 ```
+
 ### 2. All in one
 
 #### 1. HTTP (no ssl)
